@@ -1,12 +1,11 @@
-
 import React from 'react';
 
-const Index = () => {
+const Home = () => {
   return (
     <div className="min-h-screen bg-background">
-      <h1>Index Page - Should redirect to Dashboard</h1>
+      <h1>Home Page - Should redirect to Dashboard</h1>
     </div>
   );
 };
 
-export default Index;
+export default Home;
