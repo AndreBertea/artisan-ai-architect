@@ -5,9 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from '@/components/Layout';
-import { Dashboard } from '@/features/dashboard/pages/Dashboard';
-import { Interventions } from '@/features/interventions/pages/Interventions';
-import { Artisans } from '@/features/artisans/pages/Artisans';
+import { Dashboard } from '@/components/Dashboard';
+import { Interventions } from '@/components/Interventions';
+import { Artisans } from '@/components/Artisans';
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
