@@ -163,3 +163,21 @@ export const ArtisansAPI = {
     };
   }
 };
+
+// Notifications endpoints
+export const NotificationsAPI = {
+  async getUrgent() {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return { count: 3, items: [] };
+  },
+
+  async getInternal() {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return { count: 10, items: [] };
+  },
+
+  async getReminders() {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    return { count: 5, items: [] };
+  }
+};
