@@ -164,6 +164,73 @@ export const ArtisansAPI = {
   }
 };
 
+// Clients API
+export const ClientsAPI = {
+  async getList() {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const mockClients = [
+      {
+        id: 'CLI-001',
+        nom: 'Dupont SARL',
+        adresse: '15 Rue de la République, 75011 Paris',
+        evaluation: 4.5,
+        evaluations: [
+          { intervention: 'INT-2024-001', note: 4.5, date: '2024-01-15' },
+          { intervention: 'INT-2024-015', note: 4.8, date: '2024-01-10' }
+        ],
+        lat: 48.8566,
+        lng: 2.3522,
+        interventions: ['INT-2024-001', 'INT-2024-015']
+      },
+      {
+        id: 'CLI-002', 
+        nom: 'Restaurant Le Gourmet',
+        adresse: '28 Boulevard Saint-Germain, 75005 Paris',
+        evaluation: 4.2,
+        evaluations: [
+          { intervention: 'INT-2024-002', note: 4.2, date: '2024-01-16' }
+        ],
+        lat: 48.8534,
+        lng: 2.3488,
+        interventions: ['INT-2024-002']
+      },
+      {
+        id: 'CLI-003',
+        nom: 'Cabinet Médical Centre', 
+        adresse: '42 Avenue des Champs-Élysées, 75008 Paris',
+        evaluation: 4.7,
+        evaluations: [
+          { intervention: 'INT-2024-003', note: 4.7, date: '2024-01-10' }
+        ],
+        lat: 48.8698,
+        lng: 2.3075,
+        interventions: ['INT-2024-003']
+      },
+      {
+        id: 'CLI-004',
+        nom: 'Boulangerie Tradition',
+        adresse: '8 Rue Montmartre, 75001 Paris', 
+        evaluation: 3.9,
+        evaluations: [
+          { intervention: 'INT-2024-004', note: 3.9, date: '2024-01-12' }
+        ],
+        lat: 48.8647,
+        lng: 2.3421,
+        interventions: ['INT-2024-004']
+      }
+    ];
+
+    return { data: mockClients };
+  },
+
+  async getById(id: string) {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const clients = await this.getList();
+    return clients.data.find(client => client.id === id);
+  }
+};
+
 // Notifications endpoints
 export const NotificationsAPI = {
   async getUrgent() {
