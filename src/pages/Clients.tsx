@@ -159,160 +159,140 @@ export function Clients() {
         </CardContent>
       </Card>
 
-      {/* Modale Client (côté droit) */}
+      {/* Sidebar détail client */}
       {selectedClient && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex">
-          <div className="flex-1" onClick={() => setSelectedClient(null)} />
-          <div className="w-1/2 bg-background border-l shadow-xl overflow-y-auto">
-            <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Détails du client</h2>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedClient(null)}>
-                  <X className="h-4 w-4" />
-                </Button>
+        <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-50">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Détails du client</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setSelectedClient(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4 overflow-y-auto">
+            <div>
+              <h4 className="font-medium mb-2">Profil</h4>
+              <div className="flex items-start space-x-3 mb-4">
+                <Avatar className="h-12 w-12">
+                  <AvatarFallback className="text-lg">{getInitials(selectedClient.nom)}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="font-semibold">{selectedClient.nom}</h3>
+                  <p className="text-sm text-muted-foreground flex items-center mt-1">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {selectedClient.adresse}
+                  </p>
+                  <div className="flex items-center mt-2">
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
+                    <span className="font-medium">{selectedClient.evaluation.toFixed(1)}</span>
+                    <span className="text-muted-foreground text-sm ml-1">
+                      ({selectedClient.evaluations.length} éval.)
+                    </span>
+                  </div>
+                </div>
               </div>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start space-x-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback className="text-xl">{getInitials(selectedClient.nom)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold">{selectedClient.nom}</h3>
-                      <p className="text-muted-foreground flex items-center mt-1">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {selectedClient.adresse}
-                      </p>
-                      <div className="flex items-center mt-2">
-                        <Star className="h-5 w-5 text-yellow-500 mr-2" fill="currentColor" />
-                        <span className="font-medium text-lg">{selectedClient.evaluation.toFixed(1)}</span>
-                        <span className="text-muted-foreground ml-2">
-                          ({selectedClient.evaluations.length} évaluation{selectedClient.evaluations.length > 1 ? 's' : ''})
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Carte Maps simulée */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <MapPin className="h-5 w-5 mr-2" />
-                    Localisation
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-48 bg-muted rounded-lg flex items-center justify-center relative">
-                    <div className="text-center">
-                      <MapPin className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Carte Maps</p>
-                      <p className="text-xs text-muted-foreground">
-                        {selectedClient.lat.toFixed(4)}, {selectedClient.lng.toFixed(4)}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Interventions du client */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Interventions passées</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {getClientInterventions(selectedClient.nom).map((intervention) => (
-                      <div
-                        key={intervention.id}
-                        className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => setSelectedIntervention(intervention)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium">{intervention.id}</h4>
-                            <p className="text-sm text-muted-foreground">{intervention.description}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Artisan: {intervention.artisan}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            {getStatusBadge(intervention.statut)}
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(intervention.cree).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-          </div>
-        </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Localisation</h4>
+              <div className="h-32 bg-muted rounded-md flex items-center justify-center relative">
+                <div className="text-center">
+                  <MapPin className="h-6 w-6 text-red-500 mx-auto mb-1" />
+                  <p className="text-xs text-muted-foreground">Carte Maps</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedClient.lat.toFixed(4)}, {selectedClient.lng.toFixed(4)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Interventions ({getClientInterventions(selectedClient.nom).length})</h4>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {getClientInterventions(selectedClient.nom).map((intervention) => (
+                  <div
+                    key={intervention.id}
+                    className="p-3 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedIntervention(intervention)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-medium text-sm">{intervention.id}</h5>
+                        <p className="text-xs text-muted-foreground">{intervention.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {intervention.artisan}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {getStatusBadge(intervention.statut)}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(intervention.cree).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Modale Intervention (côté gauche) */}
+      {/* Sidebar détail intervention (à gauche quand ouverte depuis client) */}
       {selectedIntervention && (
-        <div className="fixed inset-0 bg-black/25 z-60 flex">
-          <div className="w-1/2 bg-background border-r shadow-xl overflow-y-auto">
-            <div className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Détails de l'intervention</h2>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedIntervention(null)}>
-                  <X className="h-4 w-4" />
+        <Card className="fixed left-6 top-24 bottom-6 w-96 shadow-lg z-60">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Intervention #{selectedIntervention.id}</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setSelectedIntervention(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4 overflow-y-auto">
+            <div>
+              <h4 className="font-medium mb-2">Détails</h4>
+              <div className="space-y-2 text-sm">
+                <div><strong>Client:</strong> {selectedIntervention.client}</div>
+                <div><strong>Artisan:</strong> {selectedIntervention.artisan}</div>
+                <div><strong>Statut:</strong> {getStatusBadge(selectedIntervention.statut)}</div>
+                <div><strong>Description:</strong> {selectedIntervention.description}</div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-2">Dates</h4>
+              <div className="space-y-2 text-sm">
+                <div><strong>Créé:</strong> {new Date(selectedIntervention.cree).toLocaleDateString()}</div>
+                <div><strong>Échéance:</strong> {new Date(selectedIntervention.echeance).toLocaleDateString()}</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Actions rapides</h4>
+              <div className="space-y-2">
+                <Button size="sm" className="w-full justify-start">
+                  Modifier statut
+                </Button>
+                <Button variant="outline" size="sm" className="w-full justify-start">
+                  Contacter artisan
                 </Button>
               </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>{selectedIntervention.id}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-medium">Description</h4>
-                    <p className="text-muted-foreground">{selectedIntervention.description}</p>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium">Client</h4>
-                      <p className="text-muted-foreground">{selectedIntervention.client}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium">Artisan</h4>
-                      <p className="text-muted-foreground">{selectedIntervention.artisan}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium">Date de création</h4>
-                      <p className="text-muted-foreground">
-                        {new Date(selectedIntervention.cree).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium">Échéance</h4>
-                      <p className="text-muted-foreground">
-                        {new Date(selectedIntervention.echeance).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-medium">Statut</h4>
-                    {getStatusBadge(selectedIntervention.statut)}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-          </div>
-          <div className="flex-1" onClick={() => setSelectedIntervention(null)} />
-        </div>
+
+            <div>
+              <h4 className="font-medium mb-2">Timeline</h4>
+              <div className="h-32 bg-muted rounded-md flex items-center justify-center">
+                <p className="text-muted-foreground text-sm">Historique des étapes</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
