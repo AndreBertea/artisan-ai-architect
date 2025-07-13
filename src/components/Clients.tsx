@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Search, MapPin, X, ExternalLink } from "lucide-react";
+import { Star, Search, MapPin, X, ExternalLink, Filter, Download } from "lucide-react";
 import { ClientsAPI, InterventionsAPI } from "@/services/api";
 
 interface Client {
@@ -96,8 +96,8 @@ export function Clients() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
-        <h1 className="text-2xl font-bold">Clients</h1>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Clients</h1>
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Chargement...</p>
         </div>
@@ -106,21 +106,38 @@ export function Clients() {
   }
 
   return (
-    <div className="p-6 space-y-6 relative">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Clients</h1>
+        <h1 className="text-3xl font-bold">Clients</h1>
         <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Rechercher un client..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-80"
-            />
-          </div>
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
         </div>
       </div>
+
+      {/* Toolbar */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center space-x-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Rechercher un client..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filtres
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -131,7 +148,7 @@ export function Clients() {
             {filteredClients.map((client) => (
               <div
                 key={client.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                 onClick={() => setSelectedClient(client)}
               >
                 <div className="flex items-center space-x-4">
@@ -241,9 +258,9 @@ export function Clients() {
         </Card>
       )}
 
-      {/* Sidebar détail intervention (à gauche quand ouverte depuis client) */}
+      {/* Sidebar détail intervention (à côté du client, pas à gauche) */}
       {selectedIntervention && (
-        <Card className="fixed left-6 top-24 bottom-6 w-96 shadow-lg z-60">
+        <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-60" style={{ right: selectedClient ? '420px' : '24px' }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Intervention #{selectedIntervention.id}</CardTitle>
             <Button 

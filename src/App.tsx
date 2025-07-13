@@ -10,9 +10,9 @@ import { AppSidebar } from '@/components/ui/AppSidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { Interventions } from '@/components/Interventions';
 import { Artisans } from '@/components/Artisans';
-import { Clients } from '@/pages/Clients';
-import { Parametre } from '@/features/account/pages/Parametre';
-import { Notifications } from '@/features/notifications/pages/Notifications';
+import { Clients } from '@/components/Clients';
+import { Parametre } from '@/components/Parametre';
+import { Notifications } from '@/components/Notifications';
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

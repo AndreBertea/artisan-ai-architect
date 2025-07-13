@@ -185,7 +185,7 @@ export const Artisans: React.FC = () => {
         </Card>
       )}
 
-      {/* Fiche artisan détaillée */}
+      {/* Sidebar détail artisan */}
       {selectedArtisan && (
         <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-50">
           <CardHeader className="flex flex-row items-center justify-between">
