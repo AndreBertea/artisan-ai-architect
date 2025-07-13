@@ -12,9 +12,13 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from 'lucide-react';
 import { InterventionsAPI } from '@/services/api';
+import { useSearchParams } from 'react-router-dom';
+import { useDragAndDrop } from '@/contexts/DragAndDropContext';
+import { useNavigate } from 'react-router-dom';
 
 interface Intervention {
   id: string;
@@ -31,12 +35,24 @@ export const Interventions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
+  const [searchParams] = useSearchParams();
+  const { startDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadInterventions = async () => {
       try {
         const data = await InterventionsAPI.getList({ page: 1 });
         setInterventions(data.data);
+        
+        // Vérifier si une intervention est sélectionnée via l'URL
+        const selectedId = searchParams.get('selected');
+        if (selectedId) {
+          const intervention = data.data.find((i: Intervention) => i.id === selectedId);
+          if (intervention) {
+            setSelectedIntervention(intervention);
+          }
+        }
       } catch (error) {
         console.error('Erreur chargement interventions:', error);
       } finally {
@@ -45,7 +61,7 @@ export const Interventions: React.FC = () => {
     };
 
     loadInterventions();
-  }, []);
+  }, [searchParams]);
 
   const getStatusBadge = (statut: string) => {
     const statusConfig = {
@@ -125,6 +141,15 @@ export const Interventions: React.FC = () => {
                   key={intervention.id}
                   className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                   onClick={() => setSelectedIntervention(intervention)}
+                  onMouseDown={(e) => {
+                    startDrag({
+                      type: 'intervention',
+                      id: intervention.id,
+                      name: `Intervention ${intervention.id}`,
+                      data: intervention
+                    }, e);
+                  }}
+                  title="Maintenez 1 seconde pour glisser"
                 >
                   <div className="flex items-center space-x-4 flex-1">
                     <div className="font-medium text-sm">#{intervention.id}</div>
@@ -152,14 +177,26 @@ export const Interventions: React.FC = () => {
       {selectedIntervention && (
         <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-50">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Intervention #{selectedIntervention.id}</CardTitle>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setSelectedIntervention(null)}
-            >
-              <XCircle className="h-4 w-4" />
-            </Button>
+            <CardTitle>
+              Intervention #{selectedIntervention.id}
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(`/interventions/${selectedIntervention.id}`)}
+                title="Ouvrir en page complète"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setSelectedIntervention(null)}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -193,7 +230,9 @@ export const Interventions: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-      )}
+              )}
+
+
     </div>
   );
 };

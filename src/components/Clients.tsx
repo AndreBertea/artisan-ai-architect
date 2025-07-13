@@ -6,12 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star, Search, MapPin, X, ExternalLink, Filter, Download } from "lucide-react";
 import { ClientsAPI, InterventionsAPI } from "@/services/api";
+import { useSearchParams } from 'react-router-dom';
+import { useDragAndDrop } from '@/contexts/DragAndDropContext';
+import { useNavigate } from 'react-router-dom';
+import { DragPreview } from '@/components/DragPreview';
 
 interface Client {
   id: string;
   nom: string;
+  type: string;
   adresse: string;
   evaluation: number;
+  interventions_count: number;
+  contact: string;
   evaluations: Array<{
     intervention: string;
     note: number;
@@ -25,11 +32,15 @@ interface Client {
 interface Intervention {
   id: string;
   client: string;
+  client_id: string;
   artisan: string;
+  artisan_id: string;
   statut: 'en_cours' | 'demande' | 'termine' | 'bloque';
   cree: string;
   echeance: string;
   description: string;
+  adresse: string;
+  montant: number;
 }
 
 export function Clients() {
@@ -39,6 +50,9 @@ export function Clients() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
+  const [searchParams] = useSearchParams();
+  const { startDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadData = async () => {
@@ -49,6 +63,15 @@ export function Clients() {
         ]);
         setClients(clientsData.data);
         setInterventions(interventionsData.data);
+        
+        // Vérifier si un client est sélectionné via l'URL
+        const selectedId = searchParams.get('selected');
+        if (selectedId) {
+          const client = clientsData.data.find((c: Client) => c.id === selectedId);
+          if (client) {
+            setSelectedClient(client);
+          }
+        }
       } catch (error) {
         console.error('Erreur chargement données:', error);
       } finally {
@@ -57,11 +80,12 @@ export function Clients() {
     };
 
     loadData();
-  }, []);
+  }, [searchParams]);
 
   const filteredClients = clients.filter(client =>
     client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.adresse.toLowerCase().includes(searchTerm.toLowerCase())
+    client.adresse.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getClientInterventions = (clientName: string) => {
@@ -150,6 +174,15 @@ export function Clients() {
                 key={client.id}
                 className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                 onClick={() => setSelectedClient(client)}
+                onMouseDown={(e) => {
+                  startDrag({
+                    type: 'client',
+                    id: client.id,
+                    name: client.nom,
+                    data: client
+                  }, e);
+                }}
+                title="Maintenez 1 seconde pour glisser"
               >
                 <div className="flex items-center space-x-4">
                   <Avatar>
@@ -161,6 +194,7 @@ export function Clients() {
                       <MapPin className="h-3 w-3 mr-1" />
                       {client.adresse}
                     </p>
+                    <p className="text-xs text-muted-foreground">{client.type}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -168,7 +202,7 @@ export function Clients() {
                     <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
                     <span className="font-medium">{client.evaluation.toFixed(1)}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{client.id}</span>
+                  <span className="text-sm text-muted-foreground">{client.interventions_count} interventions</span>
                 </div>
               </div>
             ))}
@@ -181,13 +215,23 @@ export function Clients() {
         <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-50">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Détails du client</CardTitle>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setSelectedClient(null)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(`/clients/${selectedClient.id}`)}
+                title="Ouvrir en page complète"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setSelectedClient(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4 overflow-y-auto">
             <div>
@@ -202,6 +246,7 @@ export function Clients() {
                     <MapPin className="h-3 w-3 mr-1" />
                     {selectedClient.adresse}
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">{selectedClient.type}</p>
                   <div className="flex items-center mt-2">
                     <Star className="h-4 w-4 text-yellow-500 mr-1" fill="currentColor" />
                     <span className="font-medium">{selectedClient.evaluation.toFixed(1)}</span>
@@ -210,6 +255,11 @@ export function Clients() {
                     </span>
                   </div>
                 </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div><strong>Contact:</strong> {selectedClient.contact}</div>
+                <div><strong>Interventions:</strong> {selectedClient.interventions_count}</div>
+                <div><strong>Client ID:</strong> {selectedClient.id}</div>
               </div>
             </div>
 
@@ -258,18 +308,28 @@ export function Clients() {
         </Card>
       )}
 
-      {/* Sidebar détail intervention (à côté du client, pas à gauche) */}
+      {/* Sidebar détail intervention */}
       {selectedIntervention && (
         <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-60" style={{ right: selectedClient ? '420px' : '24px' }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Intervention #{selectedIntervention.id}</CardTitle>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setSelectedIntervention(null)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => navigate(`/interventions/${selectedIntervention.id}`)}
+                title="Ouvrir en page complète"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setSelectedIntervention(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4 overflow-y-auto">
             <div>
@@ -279,6 +339,8 @@ export function Clients() {
                 <div><strong>Artisan:</strong> {selectedIntervention.artisan}</div>
                 <div><strong>Statut:</strong> {getStatusBadge(selectedIntervention.statut)}</div>
                 <div><strong>Description:</strong> {selectedIntervention.description}</div>
+                <div><strong>Adresse:</strong> {selectedIntervention.adresse}</div>
+                <div><strong>Montant:</strong> {new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(selectedIntervention.montant)}</div>
               </div>
             </div>
             
@@ -310,7 +372,9 @@ export function Clients() {
             </div>
           </CardContent>
         </Card>
-      )}
+              )}
+
+
     </div>
   );
 }
