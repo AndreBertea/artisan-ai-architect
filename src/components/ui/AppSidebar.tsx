@@ -66,13 +66,13 @@ export function AppSidebar() {
                 <img
                   src="/logo-gmbs-cl.png"
                   alt="Logo GMBS clair"
-                  className="h-32 w-auto block dark:hidden transition-all duration-700 ease-in-out"
+                  className="h-28 w-auto block dark:hidden transition-all duration-700 ease-in-out"
                   style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
                 />
                 <img
                   src="/logo-gmbs.png"
                   alt="Logo GMBS sombre"
-                  className="h-32 w-auto hidden dark:block transition-all duration-700 ease-in-out"
+                  className="h-28 w-auto hidden dark:block transition-all duration-700 ease-in-out"
                   style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
                 />
               </>
