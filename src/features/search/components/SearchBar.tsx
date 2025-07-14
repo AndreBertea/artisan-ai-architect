@@ -23,7 +23,7 @@ export const SearchBar: React.FC = () => {
   const location = useLocation();
   
   const { results, isLoading, search } = useSearch();
-  const { startDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
 
   // Filtres disponibles par page
   const getAvailableFilters = () => {
@@ -336,6 +336,7 @@ export const SearchBar: React.FC = () => {
                             data: result
                           }, e);
                         }}
+                        onTouchStart={(e) => startTouchDrag(result, e)}
                         title="Maintenez 1 seconde pour glisser"
                       >
                         <div className="text-left">

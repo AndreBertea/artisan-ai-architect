@@ -56,7 +56,7 @@ export const Artisans: React.FC = () => {
   const [selectedArtisan, setSelectedArtisan] = useState<Artisan | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -289,6 +289,12 @@ export const Artisans: React.FC = () => {
                         data: artisan
                       }, e);
                     }}
+                    onTouchStart={(e) => startTouchDrag({
+                      type: 'artisan',
+                      id: artisan.id,
+                      name: artisan.nom,
+                      data: artisan
+                    }, e)}
                     title="Maintenez 1 seconde pour glisser"
                   >
                     <div className="flex items-center space-x-4">
@@ -405,6 +411,12 @@ export const Artisans: React.FC = () => {
                         data: intervention
                       }, e);
                     }}
+                    onTouchStart={(e) => startTouchDrag({
+                      type: 'intervention',
+                      id: intervention.id,
+                      name: `Intervention ${intervention.id}`,
+                      data: intervention
+                    }, e)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -457,6 +469,12 @@ export const Artisans: React.FC = () => {
                   data: selectedIntervention
                 }, e);
               }}
+              onTouchStart={(e) => startTouchDrag({
+                type: 'intervention',
+                id: selectedIntervention.id,
+                name: `Intervention ${selectedIntervention.id}`,
+                data: selectedIntervention
+              }, e)}
             >
               Intervention #{selectedIntervention.id}
             </CardTitle>

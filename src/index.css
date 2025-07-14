@@ -108,6 +108,10 @@ All colors MUST be HSL.
   }
   body {
     @apply bg-background text-foreground;
+    /* Fix pour l'erreur -webkit-text-size-adjust */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 }
 

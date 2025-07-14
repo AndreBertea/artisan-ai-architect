@@ -36,7 +36,7 @@ export const Interventions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -143,6 +143,14 @@ export const Interventions: React.FC = () => {
                   onClick={() => setSelectedIntervention(intervention)}
                   onMouseDown={(e) => {
                     startDrag({
+                      type: 'intervention',
+                      id: intervention.id,
+                      name: `Intervention ${intervention.id}`,
+                      data: intervention
+                    }, e);
+                  }}
+                  onTouchStart={(e) => {
+                    startTouchDrag({
                       type: 'intervention',
                       id: intervention.id,
                       name: `Intervention ${intervention.id}`,

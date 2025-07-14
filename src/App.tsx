@@ -17,6 +17,7 @@ import { ClientDetail } from '@/components/ClientDetail';
 import { Parametre } from '@/components/Parametre';
 import { Notifications } from '@/components/Notifications';
 import { Messagerie } from '@/components/Messagerie';
+import { Calendrier } from '@/components/Calendrier';
 import { SearchBar } from '@/features/search/components/SearchBar';
 import { DragAndDropProvider, useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { DragPreview } from '@/components/DragPreview';
@@ -52,6 +53,7 @@ const AppContent = () => {
                       <Route path="/artisans/:id" element={<ArtisanDetail />} />
                       <Route path="/clients" element={<Clients />} />
                       <Route path="/clients/:id" element={<ClientDetail />} />
+                      <Route path="/calendrier" element={<Calendrier />} />
                       <Route path="/messagerie" element={<div className="h-[calc(100vh-120px)] -m-6"><Messagerie /></div>} />
                       <Route path="/notifications" element={<Notifications />} />
                       <Route path="/parametre" element={<Parametre />} />
@@ -77,7 +79,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
           <DragAndDropProvider>
             <AppContent />
           </DragAndDropProvider>

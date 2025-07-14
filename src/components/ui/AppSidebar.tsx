@@ -1,5 +1,5 @@
 // src/components/ui/AppSidebar.tsx
-import { Home, LayoutGrid, Users, UserCheck, Bell, User, MessageSquare } from "lucide-react";
+import { Home, LayoutGrid, Users, UserCheck, Bell, User, MessageSquare, Calendar } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -70,6 +70,21 @@ export function AppSidebar() {
 
         <SidebarFooter>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink
+                  to="/calendrier"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-accent hover:text-accent-foreground"
+                  }
+                >
+                  <Calendar className="h-4 w-4" />
+                  {!collapsed && <span>Calendrier</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <NavLink

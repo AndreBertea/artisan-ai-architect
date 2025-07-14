@@ -51,7 +51,7 @@ export function Clients() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -176,6 +176,14 @@ export function Clients() {
                 onClick={() => setSelectedClient(client)}
                 onMouseDown={(e) => {
                   startDrag({
+                    type: 'client',
+                    id: client.id,
+                    name: client.nom,
+                    data: client
+                  }, e);
+                }}
+                onTouchStart={(e) => {
+                  startTouchDrag({
                     type: 'client',
                     id: client.id,
                     name: client.nom,
