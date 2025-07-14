@@ -82,6 +82,44 @@ export function Clients() {
     loadData();
   }, [searchParams]);
 
+  useEffect(() => {
+    const handleSearchFilter = (event: CustomEvent) => {
+      const { filterKey, value, page } = event.detail;
+      if (page === '/clients') {
+        // Recharger les données originales d'abord
+        const loadOriginalData = async () => {
+          try {
+            const clientsData = await ClientsAPI.getList();
+            const originalClients = clientsData.data;
+            // Appliquer le filtre
+            const filtered = originalClients.filter((client: Client) => {
+              switch (filterKey) {
+                case 'type':
+                  return client.type.toLowerCase().includes(value.toLowerCase());
+                case 'ville':
+                  return client.adresse.toLowerCase().includes(value.toLowerCase());
+                case 'interventions':
+                  return client.interventions_count === parseInt(value);
+                case 'note':
+                  return client.evaluation >= parseFloat(value);
+                default:
+                  return true;
+              }
+            });
+            setClients(filtered);
+          } catch (error) {
+            console.error('Erreur lors du filtrage:', error);
+          }
+        };
+        loadOriginalData();
+      }
+    };
+    window.addEventListener('searchFilter', handleSearchFilter as EventListener);
+    return () => {
+      window.removeEventListener('searchFilter', handleSearchFilter as EventListener);
+    };
+  }, []);
+
   const filteredClients = clients.filter(client =>
     client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.adresse.toLowerCase().includes(searchTerm.toLowerCase()) ||

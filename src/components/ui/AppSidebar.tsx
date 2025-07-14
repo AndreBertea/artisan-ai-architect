@@ -39,9 +39,45 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+    <Sidebar className={(collapsed ? "w-14" : "w-60") + " bg-[#23272f]"} collapsible="icon">
       <SidebarContent className="flex flex-col justify-between">
         <div>
+          {/* Logo GMBS */}
+          <div className={`flex items-center justify-center py-6 transition-all duration-700 ease-in-out ${collapsed ? 'scale-90' : 'scale-100'}`}>
+            {collapsed ? (
+              <>
+                {/* Icône petite, change selon le thème */}
+                <img
+                  src="/logo-gmbs-cl.png"
+                  alt="Logo GMBS clair"
+                  className="h-10 w-auto block dark:hidden transition-all duration-700 ease-in-out"
+                  style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
+                />
+                <img
+                  src="/logo-gmbs.png"
+                  alt="Logo GMBS sombre"
+                  className="h-10 w-auto hidden dark:block transition-all duration-700 ease-in-out"
+                  style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
+                />
+              </>
+            ) : (
+              <>
+                {/* Logo grand, change selon le thème */}
+                <img
+                  src="/logo-gmbs-cl.png"
+                  alt="Logo GMBS clair"
+                  className="h-32 w-auto block dark:hidden transition-all duration-700 ease-in-out"
+                  style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
+                />
+                <img
+                  src="/logo-gmbs.png"
+                  alt="Logo GMBS sombre"
+                  className="h-32 w-auto hidden dark:block transition-all duration-700 ease-in-out"
+                  style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.10))' }}
+                />
+              </>
+            )}
+          </div>
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -58,7 +94,7 @@ export function AppSidebar() {
                         }
                       >
                         <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
+                        {!collapsed && <span className="transition-all duration-500 ease-in-out opacity-100 ml-2">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -112,8 +148,8 @@ export function AppSidebar() {
                     
                     {/* Badge à côté du texte (visible quand déployé) */}
                     {!collapsed && (
-                      <div className="flex items-center justify-between w-full ml-3">
-                        <span>Messagerie</span>
+                      <div className="flex items-center justify-between w-full ml-3 transition-all duration-500 ease-in-out">
+                        <span className="transition-all duration-500 ease-in-out opacity-100">Messagerie</span>
                         {unreadCount > 0 && (
                           <Badge 
                             variant="destructive" 
@@ -153,8 +189,8 @@ export function AppSidebar() {
                     
                     {/* Badge à côté du texte (visible quand déployé) */}
                     {!collapsed && (
-                      <div className="flex items-center justify-between w-full ml-3">
-                        <span>Notifications</span>
+                      <div className="flex items-center justify-between w-full ml-3 transition-all duration-500 ease-in-out">
+                        <span className="transition-all duration-500 ease-in-out opacity-100">Notifications</span>
                         <Badge 
                           variant="destructive" 
                           className="h-5 w-5 rounded-full p-0 text-xs badge-slide-in badge-transition flex items-center justify-center"
@@ -180,7 +216,7 @@ export function AppSidebar() {
                   <Avatar className="h-4 w-4">
                     <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                   </Avatar>
-                  {!collapsed && <span>{fullName}</span>}
+                  {!collapsed && <span className="transition-all duration-500 ease-in-out opacity-100 ml-2">{fullName}</span>}
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

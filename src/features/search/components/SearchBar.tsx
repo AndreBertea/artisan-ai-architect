@@ -38,13 +38,30 @@ export const SearchBar: React.FC = () => {
         { key: 'activite', label: 'Activité', placeholder: 'Ex: actif, moyen, inactif' }
       ];
     }
-    
+    if (path === '/interventions') {
+      return [
+        { key: 'statut', label: 'Statut', placeholder: 'Ex: en_cours, termine, attente, planifie' },
+        { key: 'artisan', label: 'Artisan', placeholder: 'Ex: Jean Dupont, Marie Martin...' },
+        { key: 'client', label: 'Client', placeholder: 'Ex: Entreprise ABC, Résidence Les Jardins...' },
+        { key: 'date', label: 'Date', placeholder: 'Ex: 2024-01-15, 2024-01-22...' },
+        { key: 'type', label: 'Type', placeholder: 'Ex: urgence, maintenance, installation' },
+        { key: 'priorite', label: 'Priorité', placeholder: 'Ex: haute, moyenne, basse' }
+      ];
+    }
+    if (path === '/clients') {
+      return [
+        { key: 'type', label: 'Type', placeholder: 'Ex: premium, régulier, nouveau, syndic' },
+        { key: 'ville', label: 'Ville', placeholder: 'Ex: Paris, Boulogne, Issy-les-Moulineaux' },
+        { key: 'interventions', label: 'Nb interventions', placeholder: 'Ex: 2, 8, 12, 15' },
+        { key: 'note', label: 'Note', placeholder: 'Ex: 3.9, 4.2, 4.5, 4.7' },
+        { key: 'statut', label: 'Statut', placeholder: 'Ex: actif, inactif' }
+      ];
+    }
     return [];
   };
 
   const getFilterValues = (filterKey: string) => {
     const path = location.pathname;
-    
     if (path === '/artisans') {
       switch (filterKey) {
         case 'metier':
@@ -61,7 +78,34 @@ export const SearchBar: React.FC = () => {
           return [];
       }
     }
-    
+    if (path === '/interventions') {
+      switch (filterKey) {
+        case 'statut':
+          return ['en_cours', 'termine', 'demande'];
+        case 'artisan':
+          return ['Jean Dupont', 'Marie Martin', 'Pierre Durand', 'Sophie Bernard'];
+        case 'client':
+          return ['Entreprise ABC', 'Résidence Les Jardins', 'Restaurant Le Gourmet', 'Boutique Mode & Co'];
+        case 'date':
+          return ['2024-01-10', '2024-01-12', '2024-01-15', '2024-01-16'];
+        default:
+          return [];
+      }
+    }
+    if (path === '/clients') {
+      switch (filterKey) {
+        case 'type':
+          return ['Client premium', 'Syndic', 'Client régulier', 'Nouveau client'];
+        case 'ville':
+          return ['Paris', 'Boulogne', 'Issy-les-Moulineaux', 'Vanves'];
+        case 'interventions':
+          return ['2', '8', '12', '15'];
+        case 'note':
+          return ['3.9', '4.2', '4.5', '4.7'];
+        default:
+          return [];
+      }
+    }
     return [];
   };
 

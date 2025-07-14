@@ -63,6 +63,44 @@ export const Interventions: React.FC = () => {
     loadInterventions();
   }, [searchParams]);
 
+  useEffect(() => {
+    const handleSearchFilter = (event: CustomEvent) => {
+      const { filterKey, value, page } = event.detail;
+      if (page === '/interventions') {
+        // Recharger les données originales d'abord
+        const loadOriginalData = async () => {
+          try {
+            const data = await InterventionsAPI.getList({ page: 1 });
+            const originalInterventions = data.data;
+            // Appliquer le filtre
+            const filtered = originalInterventions.filter((intervention: Intervention) => {
+              switch (filterKey) {
+                case 'statut':
+                  return intervention.statut === value;
+                case 'artisan':
+                  return intervention.artisan.toLowerCase().includes(value.toLowerCase());
+                case 'client':
+                  return intervention.client.toLowerCase().includes(value.toLowerCase());
+                case 'date':
+                  return intervention.cree === value || intervention.echeance === value;
+                default:
+                  return true;
+              }
+            });
+            setInterventions(filtered);
+          } catch (error) {
+            console.error('Erreur lors du filtrage:', error);
+          }
+        };
+        loadOriginalData();
+      }
+    };
+    window.addEventListener('searchFilter', handleSearchFilter as EventListener);
+    return () => {
+      window.removeEventListener('searchFilter', handleSearchFilter as EventListener);
+    };
+  }, []);
+
   const getStatusBadge = (statut: string) => {
     const statusConfig = {
       demande: { variant: 'secondary', icon: Clock, color: 'text-blue-600' },
