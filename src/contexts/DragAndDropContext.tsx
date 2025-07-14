@@ -170,11 +170,32 @@ export const DragAndDropProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, 1000);
   };
 
+  // Détection de collision avec l'onglet Messagerie (sidebar)
+  const lastMessagerieTouch = useRef(false);
+  const checkMessagerieTouch = (x: number, y: number) => {
+    const messagerieLink = document.querySelector('a[href="/messagerie"]') as HTMLAnchorElement | null;
+    if (messagerieLink) {
+      const rect = messagerieLink.getBoundingClientRect();
+      const isOver =
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom;
+      if (isOver && !lastMessagerieTouch.current) {
+        lastMessagerieTouch.current = true;
+        messagerieLink.click();
+      } else if (!isOver) {
+        lastMessagerieTouch.current = false;
+      }
+    }
+  };
+
   // Suivre le doigt
   const handleTouchMove = (event: TouchEvent) => {
     if (isTouchDragging.current && event.touches.length === 1) {
       const touch = event.touches[0];
       setDragPosition({ x: touch.clientX, y: touch.clientY });
+      checkMessagerieTouch(touch.clientX, touch.clientY);
       event.preventDefault();
     }
   };
