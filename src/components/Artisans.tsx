@@ -17,13 +17,18 @@ import {
   X,
   Wrench,
   ExternalLink,
-  Plus
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Trash
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ArtisansAPI, InterventionsAPI } from '@/services/api';
 import { useSearchParams } from 'react-router-dom';
 import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 
 interface Artisan {
   id: string;
@@ -49,6 +54,53 @@ interface Intervention {
   montant: number;
 }
 
+const METIERS = [
+  'Plomberie', 'Electricite', 'Vitrerie', 'Chauffage', 'Electroménager', 'Renovation', 'Ménage',
+  'Serrurerie', 'Bricolage', 'Volet/Store', 'Nuisible', 'Climatisation', 'Peinture', 'RDF', 'Jardinage', 'Camion'
+];
+const ZONES = [
+  '0 à 20 km', '20 à 35 km', '35 à 50 km', '50 km ou plus'
+];
+const STATUTS_DOSSIER = ['INCOMPLET', 'COMPLET'];
+const STATUTS_ARTISAN = ['Potentiel', 'Actif', 'Archivé'];
+// Utilisateurs enrichis avec couleur (mock)
+const UTILISATEURS_OBJ = [
+  { username: 'Morin', color: '#222222' },
+  { username: 'admin', color: '#000000' },
+  { username: 'admin2', color: '#1976d2' },
+  { username: 'Birckel', color: '#eab308' },
+  { username: 'Boujimal', color: '#ef4444' },
+  { username: 'test', color: '#10b981' },
+  { username: 'BERTEA', color: '#6366f1' },
+  { username: 'Aguenana', color: '#f59e42' },
+  { username: 'Saune', color: '#f472b6' },
+  { username: 's', color: '#f87171' },
+  { username: 'L', color: '#0ea5e9' },
+  { username: 'GAUTRET', color: '#a21caf' },
+  { username: 'K', color: '#f43f5e' },
+  { username: 'Montanari', color: '#22d3ee' },
+];
+
+// UserColorBubble repris de Parametre.tsx
+const UserColorBubble = ({ color, username }: { color: string, username: string }) => {
+  function getContrastYIQ(hexcolor: string) {
+    hexcolor = hexcolor.replace('#', '');
+    const r = parseInt(hexcolor.substr(0,2),16);
+    const g = parseInt(hexcolor.substr(2,2),16);
+    const b = parseInt(hexcolor.substr(4,2),16);
+    const yiq = ((r*299)+(g*587)+(b*114))/1000;
+    return (yiq >= 128) ? '#222' : '#fff';
+  }
+  return (
+    <span
+      className="inline-flex items-center px-3 py-1 rounded-full font-medium text-xs border border-gray-300 shadow-sm mr-2"
+      style={{ backgroundColor: color || '#ccc', color: getContrastYIQ(color || '#ccc') }}
+    >
+      {username}
+    </span>
+  );
+};
+
 export const Artisans: React.FC = () => {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [interventions, setInterventions] = useState<Intervention[]>([]);
@@ -61,6 +113,59 @@ export const Artisans: React.FC = () => {
   const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+  // Champs du formulaire
+  const [metiers, setMetiers] = useState<string[]>([]);
+  const [zone, setZone] = useState('');
+  const [absenceOpen, setAbsenceOpen] = useState(false);
+  const [absences, setAbsences] = useState<{debut: string, fin: string}[]>([]);
+  const [absenceDebut, setAbsenceDebut] = useState('');
+  const [absenceFin, setAbsenceFin] = useState('');
+  const [commentaires, setCommentaires] = useState<{auteur: string, date: string, texte: string}[]>([]);
+  const [nouveauCommentaire, setNouveauCommentaire] = useState('');
+  const [attribueA, setAttribueA] = useState('');
+  const [statutDossier, setStatutDossier] = useState(STATUTS_DOSSIER[0]);
+  const [statutArtisan, setStatutArtisan] = useState(STATUTS_ARTISAN[0]);
+  // Pour chaque document uploadé, on gère l'état du fichier et l'aperçu
+  const [docs, setDocs] = useState<{[k:string]: File|null}>({});
+  // Supprimer toute la logique liée à la prévisualisation de document
+  // - Retirer Eye, previewDoc, setPreviewDoc, Dialog de prévisualisation, boutons 'Voir le document'
+  // - Garder uniquement l'upload et la suppression (poubelle)
+  const handleDocChange = (key: string, file: File|null) => {
+    setDocs({ ...docs, [key]: file });
+  };
+
+  // Ajout d'une fonction pour supprimer un document
+  const handleRemoveDoc = (key: string) => {
+    setDocs({ ...docs, [key]: null });
+  };
+
+  // Ajout d'un métier
+  const handleAddMetier = (m: string) => {
+    if (!metiers.includes(m)) setMetiers([...metiers, m]);
+  };
+  const handleRemoveMetier = (m: string) => {
+    setMetiers(metiers.filter(x => x !== m));
+  };
+  // Ajout d'une absence
+  const handleAddAbsence = () => {
+    if (absenceDebut && absenceFin) {
+      setAbsences([...absences, { debut: absenceDebut, fin: absenceFin }]);
+      setAbsenceDebut('');
+      setAbsenceFin('');
+    }
+  };
+  // Ajout d'un commentaire
+  const handleAddCommentaire = () => {
+    if (nouveauCommentaire.trim()) {
+      setCommentaires([
+        ...commentaires,
+        { auteur: attribueA || 'admin', date: format(new Date(), 'dd/MM/yyyy HH:mm'), texte: nouveauCommentaire }
+      ]);
+      setNouveauCommentaire('');
+    }
+  };
+
+  const [previewDoc, setPreviewDoc] = useState<{file: File|null, label: string}>({file: null, label: ''});
 
   useEffect(() => {
     const loadData = async () => {
@@ -238,14 +343,227 @@ export const Artisans: React.FC = () => {
       </div>
       {/* Modal d'ajout d'artisan */}
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent>
+        <DialogContent
+          className="max-w-6xl w-full p-8 bg-background rounded-2xl shadow-2xl border border-border"
+          style={previewDoc.file ? { background: 'rgba(0,0,0,0.01)' } : {}}
+        >
           <DialogHeader>
-            <DialogTitle>Nouvel artisan</DialogTitle>
-            <DialogDescription>
-              (Formulaire à compléter...)
-            </DialogDescription>
+            <DialogTitle>Ajouter un artisan</DialogTitle>
           </DialogHeader>
-          {/* Formulaire à venir */}
+          <form className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Informations de l'artisan */}
+              <div className="space-y-4 bg-muted/60 p-6 rounded-xl shadow-sm border border-border">
+                <h3 className="font-semibold text-lg mb-2 text-primary">Informations de l'artisan :</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Raison Sociale" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Prénom Nom Artisan" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Téléphone" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Téléphone 2" />
+                  <input className="input md:col-span-2 bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Email" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Adresse d'intervention" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Adresse du siège social" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Statut Juridique" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Siret" />
+                </div>
+              </div>
+              {/* Gestion des absences (accordion) + Documents */}
+              <div className="space-y-6">
+                <div className="bg-muted/60 rounded-xl shadow-sm border border-border">
+                  <button type="button" className="flex items-center w-full px-6 py-3 font-semibold text-primary hover:bg-accent/40 rounded-t-xl transition" onClick={() => setAbsenceOpen(!absenceOpen)}>
+                    Gestion des Absences
+                    {absenceOpen ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
+                  </button>
+                  {absenceOpen && (
+                    <div className="p-4 space-y-2">
+                      <div className="flex flex-col md:flex-row gap-2">
+                        <input type="date" className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" value={absenceDebut} onChange={e => setAbsenceDebut(e.target.value)} placeholder="Date de début" />
+                        <input type="date" className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" value={absenceFin} onChange={e => setAbsenceFin(e.target.value)} placeholder="Date de fin" />
+                        <button type="button" className="px-4 py-2 bg-primary text-primary-foreground rounded-md shadow hover:bg-primary/90 transition" onClick={handleAddAbsence}>Ajouter une absence</button>
+                      </div>
+                      <div className="mt-2">
+                        <div className="text-sm font-medium mb-1">Absences</div>
+                        <ul>
+                          {absences.map((a, i) => (
+                            <li key={i} className="flex items-center gap-2 text-xs bg-blue-50 rounded px-2 py-1 mb-1 border border-border">
+                              {a.debut} → {a.fin}
+                              <button type="button" onClick={() => setAbsences(absences.filter((_, j) => j !== i))}><X className="h-3 w-3 text-red-500" /></button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Documents de l'entreprise */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg mb-2 text-primary">Documents de l'entreprise :</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-background p-4 rounded-xl border border-border">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">KBIS</label>
+                      {docs['kbis'] ? (
+                        <div className="flex items-center gap-2">
+                          <button type="button" className="flex items-center gap-1 text-primary hover:underline" onClick={() => setPreviewDoc({file: docs['kbis'], label: 'KBIS'})}>
+                            <Eye className="h-5 w-5" /> Voir le document
+                          </button>
+                          <button type="button" className="text-destructive hover:bg-destructive/10 rounded-full p-1" onClick={e => { e.stopPropagation(); handleRemoveDoc('kbis'); }} title="Supprimer le document">
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <input type="file" className="input" onChange={e => handleDocChange('kbis', e.target.files?.[0] || null)} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Attestation d'assurance</label>
+                      {docs['attestation'] ? (
+                        <div className="flex items-center gap-2">
+                          <button type="button" className="flex items-center gap-1 text-primary hover:underline" onClick={() => setPreviewDoc({file: docs['attestation'], label: 'Attestation d\'assurance'})}>
+                            <Eye className="h-5 w-5" /> Voir le document
+                          </button>
+                          <button type="button" className="text-destructive hover:bg-destructive/10 rounded-full p-1" onClick={e => { e.stopPropagation(); handleRemoveDoc('attestation'); }} title="Supprimer le document">
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <input type="file" className="input" onChange={e => handleDocChange('attestation', e.target.files?.[0] || null)} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">CNI Recto / Verso</label>
+                      {docs['cni'] ? (
+                        <div className="flex items-center gap-2">
+                          <button type="button" className="flex items-center gap-1 text-primary hover:underline" onClick={() => setPreviewDoc({file: docs['cni'], label: 'CNI Recto / Verso'})}>
+                            <Eye className="h-5 w-5" /> Voir le document
+                          </button>
+                          <button type="button" className="text-destructive hover:bg-destructive/10 rounded-full p-1" onClick={e => { e.stopPropagation(); handleRemoveDoc('cni'); }} title="Supprimer le document">
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <input type="file" className="input" onChange={e => handleDocChange('cni', e.target.files?.[0] || null)} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">IBAN</label>
+                      {docs['iban'] ? (
+                        <div className="flex items-center gap-2">
+                          <button type="button" className="flex items-center gap-1 text-primary hover:underline" onClick={() => setPreviewDoc({file: docs['iban'], label: 'IBAN'})}>
+                            <Eye className="h-5 w-5" /> Voir le document
+                          </button>
+                          <button type="button" className="text-destructive hover:bg-destructive/10 rounded-full p-1" onClick={e => { e.stopPropagation(); handleRemoveDoc('iban'); }} title="Supprimer le document">
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <input type="file" className="input" onChange={e => handleDocChange('iban', e.target.files?.[0] || null)} />
+                      )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium mb-1">Décharge de partenariat</label>
+                      {docs['decharge'] ? (
+                        <div className="flex items-center gap-2">
+                          <button type="button" className="flex items-center gap-1 text-primary hover:underline" onClick={() => setPreviewDoc({file: docs['decharge'], label: 'Décharge de partenariat'})}>
+                            <Eye className="h-5 w-5" /> Voir le document
+                          </button>
+                          <button type="button" className="text-destructive hover:bg-destructive/10 rounded-full p-1" onClick={e => { e.stopPropagation(); handleRemoveDoc('decharge'); }} title="Supprimer le document">
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <input type="file" className="input" onChange={e => handleDocChange('decharge', e.target.files?.[0] || null)} />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Paramètres de l'entreprise et autres */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-4 bg-muted/60 p-6 rounded-xl shadow-sm border border-border">
+                <h3 className="font-semibold text-lg mb-2 text-primary">Paramètres de l'entreprise :</h3>
+                <div className="mb-2">
+                  <label className="block text-sm font-medium mb-1">Métiers</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {metiers.map(m => (
+                      <span key={m} className="bg-primary/10 text-primary px-2 py-1 rounded flex items-center gap-1 text-xs border border-primary/30">
+                        {m}
+                        <button type="button" onClick={() => handleRemoveMetier(m)}><X className="h-3 w-3" /></button>
+                      </span>
+                    ))}
+                  </div>
+                  <select className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" onChange={e => handleAddMetier(e.target.value)} value="">
+                    <option value="">Sélectionner des métiers</option>
+                    {METIERS.filter(m => !metiers.includes(m)).map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Zone d'intervention</label>
+                  <select className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" value={zone} onChange={e => setZone(e.target.value)}>
+                    <option value="">Sélectionner une zone</option>
+                    {ZONES.map(z => <option key={z} value={z}>{z}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-2 text-primary">Commentaires :</h3>
+                <div className="bg-background p-2 rounded-xl border border-border max-h-32 overflow-y-auto text-xs mb-2">
+                  {commentaires.length === 0 && <div className="text-muted-foreground">Aucun commentaire</div>}
+                  {commentaires.map((c, i) => (
+                    <div key={i} className="mb-1">
+                      <span className="font-bold">{c.auteur}</span> <span className="text-muted-foreground">({c.date})</span> : {c.texte}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <textarea className="input flex-1 bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Écrivez votre commentaire ici..." rows={2} value={nouveauCommentaire} onChange={e => setNouveauCommentaire(e.target.value)}></textarea>
+                  <button type="button" className="px-4 py-2 bg-primary text-primary-foreground rounded-md shadow h-fit hover:bg-primary/90 transition" onClick={handleAddCommentaire}>Ajouter le commentaire</button>
+                </div>
+              </div>
+              <div className="space-y-4 bg-muted/60 p-6 rounded-xl shadow-sm border border-border">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Attribué à</label>
+                  {attribueA ? (
+                    <div className="relative inline-block">
+                      <button type="button" className="absolute -top-2 -right-2 text-destructive bg-white rounded-full shadow p-1" onClick={() => setAttribueA('')} title="Supprimer la sélection">
+                        <X className="h-4 w-4" />
+                      </button>
+                      {UserColorBubble(UTILISATEURS_OBJ.find(u => u.username === attribueA) || { username: attribueA, color: '#ccc' })}
+                    </div>
+                  ) : (
+                    <select
+                      className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md"
+                      value={attribueA}
+                      onChange={e => setAttribueA(e.target.value)}
+                    >
+                      <option value="">Sélectionner un utilisateur</option>
+                      {UTILISATEURS_OBJ.map(u => (
+                        <option key={u.username} value={u.username}>{u.username}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Statut du dossier</label>
+                  <select className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" value={statutDossier} onChange={e => setStatutDossier(e.target.value)}>
+                    {STATUTS_DOSSIER.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Statut Artisan</label>
+                  <select className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" value={statutArtisan} onChange={e => setStatutArtisan(e.target.value)}>
+                    {STATUTS_ARTISAN.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-4 mt-8">
+              <button type="button" className="px-8 py-3 bg-destructive text-destructive-foreground rounded-lg font-semibold shadow hover:bg-destructive/90 transition" onClick={() => setShowAddModal(false)}>Fermer</button>
+              <button type="submit" className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold shadow hover:bg-primary/90 transition">Enregistrer</button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -557,6 +875,26 @@ export const Artisans: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modal de visualisation du document */}
+      <Dialog open={!!previewDoc.file} onOpenChange={open => { if (!open) setPreviewDoc({file: null, label: ''}); }}>
+        <DialogContent className="max-w-[70vw] w-[70vw] max-h-[70vh] p-6 flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewDoc.label}</DialogTitle>
+          </DialogHeader>
+          {previewDoc.file && (
+            <>
+              {previewDoc.file.type.startsWith('image') ? (
+                <img src={URL.createObjectURL(previewDoc.file)} alt="Aperçu" className="max-h-[60vh] max-w-full mx-auto object-contain" />
+              ) : previewDoc.file.type === 'application/pdf' ? (
+                <iframe src={URL.createObjectURL(previewDoc.file)} className="w-full h-[60vh]" title="Aperçu PDF" />
+              ) : (
+                <div className="text-muted-foreground">Aperçu non disponible</div>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
 
     </div>
