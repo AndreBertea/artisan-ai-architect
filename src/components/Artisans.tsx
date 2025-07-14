@@ -16,8 +16,10 @@ import {
   FileText,
   X,
   Wrench,
-  ExternalLink
+  ExternalLink,
+  Plus
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ArtisansAPI, InterventionsAPI } from '@/services/api';
 import { useSearchParams } from 'react-router-dom';
 import { useDragAndDrop } from '@/contexts/DragAndDropContext';
@@ -58,6 +60,7 @@ export const Artisans: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -208,7 +211,12 @@ export const Artisans: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Artisans</h1>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          Artisans
+          <Button size="icon" variant="outline" className="ml-2" onClick={() => setShowAddModal(true)} title="Ajouter un artisan">
+            <Plus className="h-5 w-5" />
+          </Button>
+        </h1>
         <div className="flex items-center space-x-2">
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}
@@ -228,6 +236,18 @@ export const Artisans: React.FC = () => {
           </Button>
         </div>
       </div>
+      {/* Modal d'ajout d'artisan */}
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nouvel artisan</DialogTitle>
+            <DialogDescription>
+              (Formulaire à compléter...)
+            </DialogDescription>
+          </DialogHeader>
+          {/* Formulaire à venir */}
+        </DialogContent>
+      </Dialog>
 
       {/* Toolbar */}
       <Card>
