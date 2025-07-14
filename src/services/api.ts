@@ -3,14 +3,27 @@
 // En production, remplacer par de vraies requêtes HTTP
 
 // Données cohérentes partagées
-const ARTISANS_DATA = [
+type ArtisansStatut = 'expert' | 'confirme' | 'novice' | 'potentiel';
+
+const ARTISANS_DATA: Array<{
+  id: string;
+  nom: string;
+  specialite: string;
+  statut: ArtisansStatut;
+  zone: string;
+  activite_badge: 'actif' | 'moyen' | 'inactif';
+  ca_mois: number;
+  note_moyenne: number;
+  derniere_intervention: string;
+  disponible: boolean;
+}> = [
   {
     id: 'ART-001',
     nom: 'Jean Dupont',
     specialite: 'Électricien',
-    statut: 'expert' as const,
+    statut: 'expert',
     zone: 'Paris 15e',
-    activite_badge: 'actif' as const,
+    activite_badge: 'actif',
     ca_mois: 8500,
     note_moyenne: 4.8,
     derniere_intervention: '2024-01-17',
@@ -20,9 +33,9 @@ const ARTISANS_DATA = [
     id: 'ART-002',
     nom: 'Marie Martin',
     specialite: 'Plombier',
-    statut: 'confirme' as const,
+    statut: 'confirme',
     zone: 'Boulogne',
-    activite_badge: 'actif' as const,
+    activite_badge: 'actif',
     ca_mois: 6200,
     note_moyenne: 4.3,
     derniere_intervention: '2024-01-16',
@@ -32,9 +45,9 @@ const ARTISANS_DATA = [
     id: 'ART-003',
     nom: 'Pierre Durand',
     specialite: 'Menuisier',
-    statut: 'novice' as const,
+    statut: 'novice',
     zone: 'Issy-les-Moulineaux',
-    activite_badge: 'moyen' as const,
+    activite_badge: 'moyen',
     ca_mois: 3800,
     note_moyenne: 4.1,
     derniere_intervention: '2024-01-10',
@@ -44,9 +57,9 @@ const ARTISANS_DATA = [
     id: 'ART-004',
     nom: 'Sophie Bernard',
     specialite: 'Peintre',
-    statut: 'potentiel' as const,
+    statut: 'potentiel',
     zone: 'Vanves',
-    activite_badge: 'inactif' as const,
+    activite_badge: 'inactif',
     ca_mois: 1200,
     note_moyenne: 3.9,
     derniere_intervention: '2023-12-28',

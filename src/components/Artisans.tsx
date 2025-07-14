@@ -29,6 +29,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useRef } from 'react';
 
 interface Artisan {
   id: string;
@@ -113,6 +114,25 @@ export const Artisans: React.FC = () => {
   const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+  // Champs du formulaire (états pour chaque champ)
+  const [raisonSociale, setRaisonSociale] = useState('');
+  const [nomArtisan, setNomArtisan] = useState('');
+  const [telephone, setTelephone] = useState('');
+  const [telephone2, setTelephone2] = useState('');
+  const [email, setEmail] = useState('');
+  const [adresseIntervention, setAdresseIntervention] = useState('');
+  const [adresseSiege, setAdresseSiege] = useState('');
+  const [statutJuridique, setStatutJuridique] = useState('');
+  const [siret, setSiret] = useState('');
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 10;
+
+  // Référence pour éviter la double soumission
+  const isSubmitting = useRef(false);
+
   // Champs du formulaire
   const [metiers, setMetiers] = useState<string[]>([]);
   const [zone, setZone] = useState('');
@@ -166,6 +186,95 @@ export const Artisans: React.FC = () => {
   };
 
   const [previewDoc, setPreviewDoc] = useState<{file: File|null, label: string}>({file: null, label: ''});
+
+  // Fonction pour charger les artisans paginés
+  const loadArtisans = async (pageNum = 1) => {
+    setLoading(true);
+    try {
+      // Ici, on simule la pagination côté front (API mock)
+      const res = await ArtisansAPI.getList({});
+      setTotal(res.data.length);
+      setArtisans(res.data.slice((pageNum - 1) * pageSize, pageNum * pageSize));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chargement initial et à chaque changement de page
+  useEffect(() => {
+    loadArtisans(page);
+  }, [page]);
+
+  // Génération de l'ID ART-***
+  const generateNextId = (artisansList: any[]) => {
+    const ids = artisansList.map(a => a.id).filter(id => /^ART-\d+$/.test(id));
+    const maxNum = ids.length > 0 ? Math.max(...ids.map(id => parseInt(id.split('-')[1], 10))) : 0;
+    const nextNum = (maxNum + 1).toString().padStart(3, '0');
+    return `ART-${nextNum}`;
+  };
+
+  // Gestion de la soumission du formulaire
+  const handleAddArtisan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
+    try {
+      // Récupérer la liste complète pour générer l'ID
+      const res = await ArtisansAPI.getList({});
+      const nextId = generateNextId(res.data);
+      const newArtisan = {
+        id: nextId,
+        nom: nomArtisan,
+        specialite: metiers[0] || '',
+        statut: (statutArtisan.toLowerCase() as 'potentiel' | 'novice' | 'confirme' | 'expert'),
+        zone: zone,
+        activite_badge: 'actif' as 'actif',
+        ca_mois: 0,
+        note_moyenne: 0,
+        derniere_intervention: new Date().toISOString().slice(0, 10),
+        disponible: true,
+        // Champs additionnels (mock)
+        raisonSociale,
+        telephone,
+        telephone2,
+        email,
+        adresseIntervention,
+        adresseSiege,
+        statutJuridique,
+        siret,
+        absences,
+        docs,
+        commentaires,
+        attribueA,
+        statutDossier
+      };
+      // Forcer le statut à l'un des littéraux attendus par le mock
+      const statutLitteral = ['expert', 'confirme', 'novice', 'potentiel'].includes(newArtisan.statut)
+        ? newArtisan.statut
+        : 'potentiel';
+      res.data.push({
+        id: newArtisan.id,
+        nom: newArtisan.nom,
+        specialite: newArtisan.specialite,
+        statut: statutLitteral as 'expert' | 'confirme' | 'novice' | 'potentiel',
+        zone: newArtisan.zone,
+        activite_badge: newArtisan.activite_badge,
+        ca_mois: newArtisan.ca_mois,
+        note_moyenne: newArtisan.note_moyenne,
+        derniere_intervention: newArtisan.derniere_intervention,
+        disponible: newArtisan.disponible
+      });
+      setTotal(res.data.length);
+      setArtisans(res.data.slice((page - 1) * pageSize, page * pageSize));
+      setShowAddModal(false);
+      // Reset des champs
+      setRaisonSociale(''); setNomArtisan(''); setTelephone(''); setTelephone2(''); setEmail('');
+      setAdresseIntervention(''); setAdresseSiege(''); setStatutJuridique(''); setSiret('');
+      setMetiers([]); setZone(''); setAbsences([]); setCommentaires([]); setAttribueA(''); setStatutDossier(STATUTS_DOSSIER[0]); setStatutArtisan(STATUTS_ARTISAN[0]); setDocs({});
+    } finally {
+      isSubmitting.current = false;
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -350,21 +459,21 @@ export const Artisans: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Ajouter un artisan</DialogTitle>
           </DialogHeader>
-          <form className="space-y-8">
+          <form className="space-y-8" onSubmit={handleAddArtisan}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Informations de l'artisan */}
               <div className="space-y-4 bg-muted/60 p-6 rounded-xl shadow-sm border border-border">
                 <h3 className="font-semibold text-lg mb-2 text-primary">Informations de l'artisan :</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Raison Sociale" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Prénom Nom Artisan" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Téléphone" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Téléphone 2" />
-                  <input className="input md:col-span-2 bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Email" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Adresse d'intervention" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Adresse du siège social" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Statut Juridique" />
-                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Siret" />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Raison Sociale" value={raisonSociale} onChange={e => setRaisonSociale(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Prénom Nom Artisan" value={nomArtisan} onChange={e => setNomArtisan(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Téléphone" value={telephone} onChange={e => setTelephone(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Téléphone 2" value={telephone2} onChange={e => setTelephone2(e.target.value)} />
+                  <input className="input md:col-span-2 bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Adresse d'intervention" value={adresseIntervention} onChange={e => setAdresseIntervention(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Adresse du siège social" value={adresseSiege} onChange={e => setAdresseSiege(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Statut Juridique" value={statutJuridique} onChange={e => setStatutJuridique(e.target.value)} />
+                  <input className="input bg-background border focus:ring-2 focus:ring-primary/30 rounded-md" placeholder="Siret" value={siret} onChange={e => setSiret(e.target.value)} />
                 </div>
               </div>
               {/* Gestion des absences (accordion) + Documents */}
@@ -896,6 +1005,13 @@ export const Artisans: React.FC = () => {
         </DialogContent>
       </Dialog>
 
+      {total > pageSize && (
+        <div className="flex justify-center gap-2 mt-4">
+          <Button disabled={page === 1} onClick={() => setPage(page - 1)}>Page précédente</Button>
+          <span className="px-4 py-2">Page {page} / {Math.ceil(total / pageSize)}</span>
+          <Button disabled={page === Math.ceil(total / pageSize)} onClick={() => setPage(page + 1)}>Page suivante</Button>
+        </div>
+      )}
 
     </div>
   );
