@@ -23,4 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
+# Cursor IDE files
+.cursor
+.cursorrules
+.cursorignore
+
+# Project documentation files (personal workspace files)
+@lessons-learned.md
+@memories.md
+@scratchpad.md
+
 vite.config.ts.timestamp-*.mjs
