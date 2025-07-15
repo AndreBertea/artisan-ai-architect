@@ -1,36 +1,39 @@
-# Logs
-logs
+# Ignorer tous les fichiers .env à tous les niveaux
+.env
+**/.env
+
+# Ignorer les fichiers d’exemple d’environnement
+env.example
+**/env.example
+
+# Ignorer les fichiers de credentials sensibles
+credentials.json
+**/credentials.json
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Fichiers de logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+logs/
+**/logs/
 
-node_modules
-dist
-dist-ssr
-*.local
+# Fichiers de build
+dist/
+build/
+**/dist/
+**/build/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Fichiers système
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
 
-# Cursor IDE files
-.cursor
-.cursorrules
-.cursorignore
+# Verrouillages divers
+*.lock
+bun.lockb
 
-# Project documentation files (personal workspace files)
-@lessons-learned.md
-@memories.md
-@scratchpad.md
-
-vite.config.ts.timestamp-*.mjs
+# Autres fichiers temporaires
+*.tmp
+*.swp
+*.swo
