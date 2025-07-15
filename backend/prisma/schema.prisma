@@ -1,0 +1,224 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  domain    String?
+  settings  Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  users         User[]
+  clients       Client[]
+  artisans      Artisan[]
+  interventions Intervention[]
+  evaluations   Evaluation[]
+  threads       MessageThread[]
+  messages      Message[]
+  tasks         Task[]
+  notifications Notification[]
+
+  @@map("tenants")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  tenantId     String    @map("tenant_id")
+  email        String
+  passwordHash String    @map("password_hash")
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  role         String    @default("user")
+  permissions  Json      @default("[]")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLogin    DateTime? @map("last_login")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tasks         Task[]
+  notifications Notification[] @relation("UserNotifications")
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+model Client {
+  id                 String    @id @default(uuid())
+  tenantId           String    @map("tenant_id")
+  nom                String
+  type               String
+  adresse            String
+  contact            String?
+  lat                Decimal?
+  lng                Decimal?
+  evaluation         Decimal   @default(0)
+  interventionsCount Int       @default(0) @map("interventions_count")
+  settings           Json      @default("{}")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  deletedAt          DateTime? @map("deleted_at")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  interventions Intervention[]
+  evaluations   Evaluation[]
+
+  @@map("clients")
+}
+
+model Artisan {
+  id                   String    @id @default(uuid())
+  tenantId             String    @map("tenant_id")
+  nom                  String
+  specialite           String
+  statut               String    @default("novice")
+  zone                 String
+  activiteBadge        String    @default("moyen") @map("activite_badge")
+  caMois               Decimal   @default(0) @map("ca_mois")
+  noteMoyenne          Decimal   @default(0) @map("note_moyenne")
+  derniereIntervention DateTime? @map("derniere_intervention")
+  disponible           Boolean   @default(true)
+  contactInfo          Json      @default("{}") @map("contact_info")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  interventions Intervention[]
+
+  @@map("artisans")
+}
+
+model Intervention {
+  id          String    @id @default(uuid())
+  tenantId    String    @map("tenant_id")
+  clientId    String    @map("client_id")
+  artisanId   String?   @map("artisan_id")
+  statut      String    @default("demande")
+  description String
+  adresse     String
+  montant     Decimal?
+  cree        DateTime  @default(now())
+  echeance    DateTime
+  dateDebut   DateTime? @map("date_debut")
+  dateFin     DateTime? @map("date_fin")
+  notes       String?
+  documents   Json      @default("[]")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client     Client      @relation(fields: [clientId], references: [id])
+  artisan    Artisan?    @relation(fields: [artisanId], references: [id])
+  evaluation Evaluation?
+  tasks      Task[]
+
+  @@map("interventions")
+}
+
+model Evaluation {
+  id             String   @id @default(uuid())
+  tenantId       String   @map("tenant_id")
+  interventionId String   @unique @map("intervention_id")
+  clientId       String   @map("client_id")
+  note           Int
+  commentaire    String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("evaluations")
+}
+
+model MessageThread {
+  id                   String    @id @default(uuid())
+  tenantId             String    @map("tenant_id")
+  title                String
+  participants         Json
+  lastMessageContent   String?   @map("last_message_content")
+  lastMessageSender    String?   @map("last_message_sender")
+  lastMessageTimestamp DateTime? @map("last_message_timestamp")
+  unreadCount          Int       @default(0) @map("unread_count")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("message_threads")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  threadId    String   @map("thread_id")
+  content     String
+  sender      String
+  timestamp   DateTime @default(now())
+  isRead      Boolean  @default(false) @map("is_read")
+  attachments Json     @default("[]")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Task {
+  id             String    @id @default(uuid())
+  tenantId       String    @map("tenant_id")
+  title          String
+  description    String?
+  date           DateTime
+  priority       String    @default("medium")
+  completed      Boolean   @default(false)
+  type           String
+  source         String?
+  interventionId String?   @map("intervention_id")
+  assignedTo     String?   @map("assigned_to")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  intervention Intervention? @relation(fields: [interventionId], references: [id])
+  assignedUser User?         @relation(fields: [assignedTo], references: [id])
+
+  @@map("tasks")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  tenantId  String    @map("tenant_id")
+  userId    String?   @map("user_id")
+  title     String
+  message   String
+  type      String
+  severity  String    @default("medium")
+  readAt    DateTime? @map("read_at")
+  data      Json      @default("{}")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}

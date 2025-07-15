@@ -1,73 +1,168 @@
-# Welcome to your Lovable project
+# Artisan AI Architect - CRM Multi-tenant
 
-## Project info
+Application CRM moderne pour la gestion d'artisans et d'interventions, avec architecture multi-tenant et IA intégrée.
 
-**URL**: https://lovable.dev/projects/68c57cb4-ae86-4ff0-aeef-84d8443e0680
+## 🏗️ Architecture
 
-## How can I edit this code?
+### Frontend
+- **React 18** + **TypeScript 5** + **Vite**
+- **shadcn/ui** + **Tailwind CSS**
+- **React Query** + **Zustand**
+- **React Router DOM**
 
-There are several ways of editing your application.
+### Backend
+- **NestJS 11** + **TypeScript**
+- **Prisma 5** + **PostgreSQL 16**
+- **JWT Authentication** + **Multi-tenant RLS**
+- **Redis** + **Kafka** (CDC)
+- **OpenAI** (Embeddings)
 
-**Use Lovable**
+## 🚀 Déploiement Rapide
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/68c57cb4-ae86-4ff0-aeef-84d8443e0680) and start prompting.
+### Prérequis
+- Docker et Docker Compose
+- Node.js 18+
+- PostgreSQL 16 (avec extensions pgvector, pgcrypto)
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+1. **Cloner le projet**
+```bash
+git clone https://github.com/AndreBertea/artisan-ai-architect.git
+cd artisan-ai-architect
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. **Configurer l'environnement**
+```bash
+cp backend/env.example backend/.env
+# Éditer backend/.env avec vos configurations
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. **Déployer avec Docker**
+```bash
+./deploy.sh
+```
 
-Follow these steps:
+4. **Accéder à l'application**
+- Frontend: http://localhost:3001
+- Backend API: http://localhost:3000
+- Base de données: localhost:5432
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Compte par défaut
+- **Email**: admin@artisan-ai.com
+- **Mot de passe**: admin123
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 📁 Structure du Projet
 
-# Step 3: Install the necessary dependencies.
-npm i
+```
+artisan-ai-architect/
+├── src/                    # Frontend React
+│   ├── components/         # Composants UI
+│   ├── features/          # Fonctionnalités (AI, Messaging, Search)
+│   ├── services/          # API mockées
+│   └── ...
+├── backend/               # Backend NestJS
+│   ├── src/
+│   │   ├── modules/       # Modules métier
+│   │   ├── common/        # Services partagés
+│   │   └── config/        # Configuration
+│   ├── prisma/           # Schéma et migrations
+│   └── ...
+├── docker-compose.yml    # Orchestration Docker
+└── deploy.sh            # Script de déploiement
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## 🔧 Développement
+
+### Backend
+```bash
+cd backend
+npm install
+npm run start:dev
+```
+
+### Frontend
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Base de données
+```bash
+cd backend
+npx prisma migrate dev
+npx prisma studio
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🏢 Fonctionnalités Multi-tenant
 
-**Use GitHub Codespaces**
+- **Isolation des données** par tenant
+- **Row-Level Security** (RLS) PostgreSQL
+- **Middleware tenant** automatique
+- **Authentification JWT** avec tenant_id
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🤖 IA Intégrée
 
-## What technologies are used for this project?
+- **Recherche sémantique** avec embeddings
+- **Assistant IA** pour les questions
+- **Vector store** PostgreSQL (pgvector)
+- **CDC** avec Debezium/Kafka
 
-This project is built with:
+## 📊 API Endpoints
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Authentification
+- `POST /api/v1/auth/login` - Connexion
+- `POST /api/v1/auth/register` - Inscription
+- `GET /api/v1/auth/profile` - Profil utilisateur
 
-## How can I deploy this project?
+### Interventions
+- `GET /api/v1/interventions` - Liste des interventions
+- `POST /api/v1/interventions` - Créer une intervention
+- `GET /api/v1/interventions/:id` - Détails intervention
+- `PATCH /api/v1/interventions/:id` - Modifier intervention
+- `DELETE /api/v1/interventions/:id` - Supprimer intervention
 
-Simply open [Lovable](https://lovable.dev/projects/68c57cb4-ae86-4ff0-aeef-84d8443e0680) and click on Share -> Publish.
+## 🔒 Sécurité
 
-## Can I connect a custom domain to my Lovable project?
+- **JWT** avec expiration
+- **bcrypt** pour les mots de passe
+- **CORS** configuré
+- **Rate limiting**
+- **Validation** des entrées
+- **Soft delete** pour les données
 
-Yes, you can!
+## 📈 Monitoring
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **Prometheus** métriques
+- **Grafana** dashboards
+- **Loki** logs centralisés
+- **Health checks** Docker
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🚀 Production
+
+```bash
+# Déploiement production
+./deploy.sh production
+
+# Variables d'environnement requises
+DATABASE_URL=postgresql://...
+REDIS_URL=redis://...
+JWT_SECRET=your-secret-key
+OPENAI_API_KEY=sk-...
+```
+
+## 📝 Licence
+
+MIT License - Voir LICENSE pour plus de détails.
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche feature
+3. Commit vos changements
+4. Push vers la branche
+5. Ouvrir une Pull Request
+
+---
+
+**Artisan AI Architect** - CRM moderne pour artisans et interventions 🛠️
