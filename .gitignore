@@ -1,3 +1,11 @@
+# Fichiers sensibles à ignorer partout
+.env
+**/.env
+env.example
+**/env.example
+credentials.json
+**/credentials.json
+
 # Logs
 logs
 *.log
@@ -7,21 +15,31 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dépendances
+node_modules/
+**/node_modules/
 
-# Editor directories and files
+# Build
+dist/
+dist-ssr/
+build/
+**/dist/
+**/build/
+
+# Fichiers locaux temporaires
+*.local
+*.tmp
+*.swp
+*.swo
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Dossiers d’éditeur
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
 # Cursor IDE files
 .cursor
@@ -33,4 +51,9 @@ dist-ssr
 @memories.md
 @scratchpad.md
 
+# Fichiers de verrouillage
+*.lock
+bun.lockb
+
+# Autres fichiers temporaires ou spécifiques
 vite.config.ts.timestamp-*.mjs
