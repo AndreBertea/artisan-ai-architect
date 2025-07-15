@@ -1,73 +1,100 @@
-# Welcome to your Lovable project
+CRM GMBS - Page dédiée au CRM du client
 
-## Project info
+Application CRM moderne pour la gestion d'artisans et d'interventions.
 
-**URL**: https://lovable.dev/projects/68c57cb4-ae86-4ff0-aeef-84d8443e0680
+🏗️ Architecture
+Frontend
 
-## How can I edit this code?
+    React 18 + TypeScript 5 + Vite
+    shadcn/ui + Tailwind CSS
+    React Query + Zustand
+    React Router DOM
 
-There are several ways of editing your application.
+🚀 Déploiement Rapide
+Prérequis
 
-**Use Lovable**
+    Node.js 18+
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/68c57cb4-ae86-4ff0-aeef-84d8443e0680) and start prompting.
+Installation
 
-Changes made via Lovable will be committed automatically to this repo.
+    Cloner le projet
 
-**Use your preferred IDE**
+git clone https://github.com/AndreBertea/artisan-ai-architect.git
+cd artisan-ai-architect
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+    Installer les dépendances
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+npm install
 
-Follow these steps:
+    Lancer l'application
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+    Accéder à l'application
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+    Frontend: http://localhost:3001
 
-**Use GitHub Codespaces**
+Compte par défaut
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+    Email: admin@artisan-ai.com
+    Mot de passe: admin123
 
-## What technologies are used for this project?
+📁 Structure du Projet
 
-This project is built with:
+artisan-ai-architect/
+├── src/                    # Frontend React
+│   ├── components/         # Composants UI
+│   ├── features/           # Fonctionnalités (AI, Messaging, Search)
+│   ├── services/           # API mockées
+│   └── ...
+└── ...
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+🔧 Développement
 
-## How can I deploy this project?
+npm install
+npm run dev
 
-Simply open [Lovable](https://lovable.dev/projects/68c57cb4-ae86-4ff0-aeef-84d8443e0680) and click on Share -> Publish.
+🏢 Fonctionnalités principales
 
-## Can I connect a custom domain to my Lovable project?
+    Gestion des artisans et interventions
+    Recherche sémantique avec IA
+    Authentification JWT (mockée)
 
-Yes, you can!
+🤖 IA Intégrée
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+    Recherche sémantique avec embeddings
+    Assistant IA pour les questions
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+📊 API Endpoints (mockés)
+
+    POST /api/v1/auth/login - Connexion
+    POST /api/v1/auth/register - Inscription
+    GET /api/v1/auth/profile - Profil utilisateur
+    GET /api/v1/interventions - Liste des interventions
+    POST /api/v1/interventions - Créer une intervention
+    GET /api/v1/interventions/:id - Détails intervention
+    PATCH /api/v1/interventions/:id - Modifier intervention
+    DELETE /api/v1/interventions/:id - Supprimer intervention
+
+🔒 Sécurité (mockée)
+
+    JWT avec expiration
+    bcrypt pour les mots de passe
+    CORS configuré
+    Rate limiting
+    Validation des entrées
+    Soft delete pour les données
+
+📝 Licence
+
+MIT License - Voir LICENSE pour plus de détails.
+
+🤝 Contribution
+
+    Fork le projet
+    Créer une branche feature
+    Commit vos changements
+    Push vers la branche
+    Ouvrir une Pull Request
+
+CRM GMBS - Page dédiée au CRM du client 🛠️
