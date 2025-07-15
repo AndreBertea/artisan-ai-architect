@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Eye, EyeOff, X, Wrench } from 'lucide-react';
@@ -30,6 +30,266 @@ const UserColorBubble = ({ color, username }: { color: string, username: string 
     </span>
   );
 };
+
+// Palette de couleurs (hex)
+const PALETTES = [
+  ["#3F756C", "#F6EECD", "#E1C789", "#C6743E"],
+  ["#283D22", "#B4B66F", "#F1F0CC", "#93B5AF"],
+  ["#83BBC1", "#E7DDC7", "#B92C0D", "#1F2C24"],
+  ["#1B4D3E", "#EA362A", "#F1F0CC", "#C6C596"],
+  ["#9CADB3", "#CFDADA", "#EBF2F2", "#BBD5D8"],
+  ["#232E3F", "#CF9421", "#EEECE3", "#DAD5C6"]
+];
+
+// Utilitaire pour convertir hex en hsl string
+function hexToHSL(hex) {
+  hex = hex.replace('#', '');
+  let r = parseInt(hex.substring(0,2), 16) / 255;
+  let g = parseInt(hex.substring(2,4), 16) / 255;
+  let b = parseInt(hex.substring(4,6), 16) / 255;
+  let max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+  if(max === min){ h = s = 0; }
+  else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch(max){
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  h = Math.round(h*360); s = Math.round(s*100); l = Math.round(l*100);
+  return `${h} ${s}% ${l}%`;
+}
+
+// Variables CSS à surcharger (ordre: primary, secondary, accent, sidebar)
+const PALETTE_VARS = [
+  '--primary', '--secondary', '--accent', '--sidebar-background',
+  '--card', '--popover', '--muted', '--border', '--input', '--ring'
+];
+
+// Mapping palette -> variables (on applique les 4 couleurs sur les principaux usages)
+function applyPalette(palette, idx) {
+  // Palette 1 : mapping original
+  if (idx === 0) {
+    const hsl0 = hexToHSL(palette[0]); // #3F756C
+    const hsl1 = hexToHSL(palette[1]); // #F6EECD
+    const hsl2 = hexToHSL(palette[2]); // #E1C789
+    const hsl3 = hexToHSL(palette[3]); // #C6743E
+    document.documentElement.style.setProperty('--background', hsl1);
+    document.documentElement.style.setProperty('--foreground', hsl0);
+    document.documentElement.style.setProperty('--card', hsl1);
+    document.documentElement.style.setProperty('--card-foreground', hsl0);
+    document.documentElement.style.setProperty('--popover', hsl1);
+    document.documentElement.style.setProperty('--popover-foreground', hsl0);
+    document.documentElement.style.setProperty('--primary', hsl0);
+    document.documentElement.style.setProperty('--primary-foreground', hsl1);
+    document.documentElement.style.setProperty('--secondary', hsl2);
+    document.documentElement.style.setProperty('--secondary-foreground', hsl0);
+    document.documentElement.style.setProperty('--accent', hsl2);
+    document.documentElement.style.setProperty('--accent-foreground', hsl0);
+    document.documentElement.style.setProperty('--muted', hsl2);
+    document.documentElement.style.setProperty('--muted-foreground', hsl0);
+    document.documentElement.style.setProperty('--destructive', hsl3);
+    document.documentElement.style.setProperty('--destructive-foreground', hsl1);
+    document.documentElement.style.setProperty('--border', hsl0);
+    document.documentElement.style.setProperty('--input', hsl0);
+    document.documentElement.style.setProperty('--ring', hsl3);
+    document.documentElement.style.setProperty('--sidebar-background', hsl0);
+    document.documentElement.style.setProperty('--sidebar-foreground', hsl1);
+    document.documentElement.style.setProperty('--sidebar-primary', hsl0);
+    document.documentElement.style.setProperty('--sidebar-primary-foreground', hsl1);
+    document.documentElement.style.setProperty('--sidebar-accent', hsl2);
+    document.documentElement.style.setProperty('--sidebar-accent-foreground', hsl0);
+    document.documentElement.style.setProperty('--sidebar-border', hsl0);
+    document.documentElement.style.setProperty('--sidebar-ring', hsl3);
+  } else if (idx === 1) {
+    // Palette 2 : vert très foncé, vert olive, crème, bleu-vert
+    const hsl0 = hexToHSL(palette[0]); // #283D22
+    const hsl1 = hexToHSL(palette[1]); // #B4B66F
+    const hsl2 = hexToHSL(palette[2]); // #F1F0CC
+    const hsl3 = hexToHSL(palette[3]); // #93B5AF
+    document.documentElement.style.setProperty('--background', hsl2);
+    document.documentElement.style.setProperty('--foreground', hsl0);
+    document.documentElement.style.setProperty('--card', hsl2);
+    document.documentElement.style.setProperty('--card-foreground', hsl0);
+    document.documentElement.style.setProperty('--popover', hsl2);
+    document.documentElement.style.setProperty('--popover-foreground', hsl0);
+    document.documentElement.style.setProperty('--primary', hsl0);
+    document.documentElement.style.setProperty('--primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--secondary', hsl1);
+    document.documentElement.style.setProperty('--secondary-foreground', hsl0);
+    document.documentElement.style.setProperty('--accent', hsl3);
+    document.documentElement.style.setProperty('--accent-foreground', hsl0);
+    document.documentElement.style.setProperty('--muted', hsl3);
+    document.documentElement.style.setProperty('--muted-foreground', hsl0);
+    document.documentElement.style.setProperty('--destructive', hsl1);
+    document.documentElement.style.setProperty('--destructive-foreground', hsl2);
+    document.documentElement.style.setProperty('--border', hsl0);
+    document.documentElement.style.setProperty('--input', hsl0);
+    document.documentElement.style.setProperty('--ring', hsl1);
+    document.documentElement.style.setProperty('--sidebar-background', hsl0);
+    document.documentElement.style.setProperty('--sidebar-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-primary', hsl0);
+    document.documentElement.style.setProperty('--sidebar-primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-accent', hsl1);
+    document.documentElement.style.setProperty('--sidebar-accent-foreground', hsl0);
+    document.documentElement.style.setProperty('--sidebar-border', hsl0);
+    document.documentElement.style.setProperty('--sidebar-ring', hsl1);
+  } else if (idx === 2) {
+    // Palette 3 : bleu-vert, beige, rouge brique, vert très foncé
+    const hsl0 = hexToHSL(palette[0]); // #83BBC1
+    const hsl1 = hexToHSL(palette[1]); // #E7DDC7
+    const hsl2 = hexToHSL(palette[2]); // #B92C0D
+    const hsl3 = hexToHSL(palette[3]); // #1F2C24
+    document.documentElement.style.setProperty('--background', hsl1);
+    document.documentElement.style.setProperty('--foreground', hsl3);
+    document.documentElement.style.setProperty('--card', hsl1);
+    document.documentElement.style.setProperty('--card-foreground', hsl3);
+    document.documentElement.style.setProperty('--popover', hsl1);
+    document.documentElement.style.setProperty('--popover-foreground', hsl3);
+    document.documentElement.style.setProperty('--primary', hsl0);
+    document.documentElement.style.setProperty('--primary-foreground', hsl1);
+    document.documentElement.style.setProperty('--secondary', hsl3);
+    document.documentElement.style.setProperty('--secondary-foreground', hsl1);
+    document.documentElement.style.setProperty('--accent', hsl2);
+    document.documentElement.style.setProperty('--accent-foreground', hsl1);
+    document.documentElement.style.setProperty('--muted', hsl0);
+    document.documentElement.style.setProperty('--muted-foreground', hsl3);
+    document.documentElement.style.setProperty('--destructive', hsl2);
+    document.documentElement.style.setProperty('--destructive-foreground', hsl1);
+    document.documentElement.style.setProperty('--border', hsl0);
+    document.documentElement.style.setProperty('--input', hsl0);
+    document.documentElement.style.setProperty('--ring', hsl2);
+    document.documentElement.style.setProperty('--sidebar-background', hsl3);
+    document.documentElement.style.setProperty('--sidebar-foreground', hsl1);
+    document.documentElement.style.setProperty('--sidebar-primary', hsl3);
+    document.documentElement.style.setProperty('--sidebar-primary-foreground', hsl1);
+    document.documentElement.style.setProperty('--sidebar-accent', hsl2);
+    document.documentElement.style.setProperty('--sidebar-accent-foreground', hsl1);
+    document.documentElement.style.setProperty('--sidebar-border', hsl3);
+    document.documentElement.style.setProperty('--sidebar-ring', hsl2);
+  } else if (idx === 3) {
+    // Palette 4 : vert très foncé, rouge vif, crème, vert olive pâle
+    const hsl0 = hexToHSL(palette[0]); // #1B4D3E
+    const hsl1 = hexToHSL(palette[1]); // #EA362A
+    const hsl2 = hexToHSL(palette[2]); // #F1F0CC
+    const hsl3 = hexToHSL(palette[3]); // #C6C596
+    document.documentElement.style.setProperty('--background', hsl2);
+    document.documentElement.style.setProperty('--foreground', hsl0);
+    document.documentElement.style.setProperty('--card', hsl2);
+    document.documentElement.style.setProperty('--card-foreground', hsl0);
+    document.documentElement.style.setProperty('--popover', hsl2);
+    document.documentElement.style.setProperty('--popover-foreground', hsl0);
+    document.documentElement.style.setProperty('--primary', hsl0);
+    document.documentElement.style.setProperty('--primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--secondary', hsl3);
+    document.documentElement.style.setProperty('--secondary-foreground', hsl0);
+    document.documentElement.style.setProperty('--accent', hsl1);
+    document.documentElement.style.setProperty('--accent-foreground', hsl2);
+    document.documentElement.style.setProperty('--muted', hsl3);
+    document.documentElement.style.setProperty('--muted-foreground', hsl0);
+    document.documentElement.style.setProperty('--destructive', hsl1);
+    document.documentElement.style.setProperty('--destructive-foreground', hsl2);
+    document.documentElement.style.setProperty('--border', hsl0);
+    document.documentElement.style.setProperty('--input', hsl0);
+    document.documentElement.style.setProperty('--ring', hsl1);
+    document.documentElement.style.setProperty('--sidebar-background', hsl0);
+    document.documentElement.style.setProperty('--sidebar-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-primary', hsl0);
+    document.documentElement.style.setProperty('--sidebar-primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-accent', hsl1);
+    document.documentElement.style.setProperty('--sidebar-accent-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-border', hsl0);
+    document.documentElement.style.setProperty('--sidebar-ring', hsl1);
+  } else if (idx === 4) {
+    // Palette 5 : bleu-gris, gris clair, bleu très pâle, bleu doux
+    const hsl0 = hexToHSL(palette[0]); // #9CADB3
+    const hsl1 = hexToHSL(palette[1]); // #CFDADA
+    const hsl2 = hexToHSL(palette[2]); // #EBF2F2
+    const hsl3 = hexToHSL(palette[3]); // #BBD5D8
+    document.documentElement.style.setProperty('--background', hsl2);
+    document.documentElement.style.setProperty('--foreground', hsl0);
+    document.documentElement.style.setProperty('--card', hsl2);
+    document.documentElement.style.setProperty('--card-foreground', hsl0);
+    document.documentElement.style.setProperty('--popover', hsl2);
+    document.documentElement.style.setProperty('--popover-foreground', hsl0);
+    document.documentElement.style.setProperty('--primary', hsl0);
+    document.documentElement.style.setProperty('--primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--secondary', hsl3);
+    document.documentElement.style.setProperty('--secondary-foreground', hsl0);
+    document.documentElement.style.setProperty('--accent', hsl1);
+    document.documentElement.style.setProperty('--accent-foreground', hsl0);
+    document.documentElement.style.setProperty('--muted', hsl1);
+    document.documentElement.style.setProperty('--muted-foreground', hsl0);
+    document.documentElement.style.setProperty('--destructive', hsl3);
+    document.documentElement.style.setProperty('--destructive-foreground', hsl2);
+    document.documentElement.style.setProperty('--border', hsl0);
+    document.documentElement.style.setProperty('--input', hsl0);
+    document.documentElement.style.setProperty('--ring', hsl1);
+    document.documentElement.style.setProperty('--sidebar-background', hsl0);
+    document.documentElement.style.setProperty('--sidebar-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-primary', hsl0);
+    document.documentElement.style.setProperty('--sidebar-primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-accent', hsl1);
+    document.documentElement.style.setProperty('--sidebar-accent-foreground', hsl0);
+    document.documentElement.style.setProperty('--sidebar-border', hsl0);
+    document.documentElement.style.setProperty('--sidebar-ring', hsl1);
+  } else if (idx === 5) {
+    // Palette 6 : bleu nuit, or, crème, beige
+    const hsl0 = hexToHSL(palette[0]); // #232E3F
+    const hsl1 = hexToHSL(palette[1]); // #CF9421
+    const hsl2 = hexToHSL(palette[2]); // #EEECE3
+    const hsl3 = hexToHSL(palette[3]); // #DAD5C6
+    document.documentElement.style.setProperty('--background', hsl2);
+    document.documentElement.style.setProperty('--foreground', hsl0);
+    document.documentElement.style.setProperty('--card', hsl2);
+    document.documentElement.style.setProperty('--card-foreground', hsl0);
+    document.documentElement.style.setProperty('--popover', hsl2);
+    document.documentElement.style.setProperty('--popover-foreground', hsl0);
+    document.documentElement.style.setProperty('--primary', hsl0);
+    document.documentElement.style.setProperty('--primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--secondary', hsl3);
+    document.documentElement.style.setProperty('--secondary-foreground', hsl0);
+    document.documentElement.style.setProperty('--accent', hsl1);
+    document.documentElement.style.setProperty('--accent-foreground', hsl2);
+    document.documentElement.style.setProperty('--muted', hsl3);
+    document.documentElement.style.setProperty('--muted-foreground', hsl0);
+    document.documentElement.style.setProperty('--destructive', hsl1);
+    document.documentElement.style.setProperty('--destructive-foreground', hsl2);
+    document.documentElement.style.setProperty('--border', hsl0);
+    document.documentElement.style.setProperty('--input', hsl0);
+    document.documentElement.style.setProperty('--ring', hsl1);
+    document.documentElement.style.setProperty('--sidebar-background', hsl0);
+    document.documentElement.style.setProperty('--sidebar-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-primary', hsl0);
+    document.documentElement.style.setProperty('--sidebar-primary-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-accent', hsl1);
+    document.documentElement.style.setProperty('--sidebar-accent-foreground', hsl2);
+    document.documentElement.style.setProperty('--sidebar-border', hsl0);
+    document.documentElement.style.setProperty('--sidebar-ring', hsl1);
+  } else {
+    // Mapping générique pour les autres palettes (fallback)
+    const hsl = palette.map(hexToHSL);
+    document.documentElement.style.setProperty('--primary', hsl[0]);
+    document.documentElement.style.setProperty('--secondary', hsl[1]);
+    document.documentElement.style.setProperty('--accent', hsl[2]);
+    document.documentElement.style.setProperty('--sidebar-background', hsl[3]);
+    document.documentElement.style.setProperty('--card', hsl[1]);
+    document.documentElement.style.setProperty('--popover', hsl[1]);
+    document.documentElement.style.setProperty('--muted', hsl[2]);
+    document.documentElement.style.setProperty('--border', hsl[0]);
+    document.documentElement.style.setProperty('--input', hsl[0]);
+    document.documentElement.style.setProperty('--ring', hsl[3]);
+  }
+}
+
+function resetPalette() {
+  // On enlève les overrides pour revenir au thème clair/sombre natif
+  PALETTE_VARS.forEach(v => document.documentElement.style.removeProperty(v));
+}
 
 export function Parametre() {
   const { fullName, initials, email } = useAuth();
@@ -63,6 +323,20 @@ export function Parametre() {
 
   const [editUser, setEditUser] = useState<any | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedPalette, setSelectedPalette] = useState<number|null>(() => {
+    const saved = localStorage.getItem('selectedPalette');
+    return saved !== null && !isNaN(Number(saved)) ? Number(saved) as number : null;
+  });
+
+  useEffect(() => {
+    if (selectedPalette === null) {
+      resetPalette();
+      localStorage.removeItem('selectedPalette');
+    } else {
+      applyPalette(PALETTES[selectedPalette], selectedPalette);
+      localStorage.setItem('selectedPalette', String(selectedPalette));
+    }
+  }, [selectedPalette]);
 
   const handleLogout = () => {
     // TODO: Implement logout logic
@@ -134,7 +408,23 @@ export function Parametre() {
           <div className="flex items-center justify-between pt-4">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">Thème</span>
-              <ThemeToggle />
+              <ThemeToggle onClick={() => setSelectedPalette(null)} />
+              {/* Boutons palettes */}
+              <div className="flex space-x-2 ml-4">
+                {PALETTES.map((palette, idx) => (
+                  <button
+                    key={idx}
+                    className={`flex items-center space-x-0.5 rounded-full border-2 p-1 transition-all ${selectedPalette===idx ? 'border-primary' : 'border-gray-300'}`}
+                    style={{ outline: selectedPalette===idx ? '2px solid #3F756C' : 'none' }}
+                    onClick={() => setSelectedPalette(idx)}
+                    title={`Palette ${idx+1}`}
+                  >
+                    {palette.map((color, i) => (
+                      <span key={i} style={{ background: color, width: 16, height: 16, borderRadius: '50%', display: 'inline-block', marginLeft: i>0?2:0 }} />
+                    ))}
+                  </button>
+                ))}
+              </div>
             </div>
             
             <Button variant="destructive" onClick={handleLogout}>
