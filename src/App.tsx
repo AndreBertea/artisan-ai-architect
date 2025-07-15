@@ -16,11 +16,8 @@ import { Clients } from '@/components/Clients';
 import { ClientDetail } from '@/components/ClientDetail';
 import { Parametre } from '@/components/Parametre';
 import { Notifications } from '@/components/Notifications';
-import { Messagerie } from '@/components/Messagerie';
 import { Calendrier } from '@/components/Calendrier';
 import { SearchBar } from '@/features/search/components/SearchBar';
-import { DragAndDropProvider, useDragAndDrop } from '@/contexts/DragAndDropContext';
-import { DragPreview } from '@/components/DragPreview';
 import { Button } from '@/components/ui/button';
 import { Bell } from 'lucide-react';
 import NotFound from "./pages/NotFound";
@@ -28,8 +25,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { draggedItem, isDragging, dragPosition } = useDragAndDrop();
-
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -43,32 +38,24 @@ const AppContent = () => {
               <SearchBar />
             </div>
           </header>
-                            <div className="p-6">
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/interventions" element={<Interventions />} />
-                      <Route path="/interventions/:id" element={<InterventionDetail />} />
-                      <Route path="/artisans" element={<Artisans />} />
-                      <Route path="/artisans/:id" element={<ArtisanDetail />} />
-                      <Route path="/clients" element={<Clients />} />
-                      <Route path="/clients/:id" element={<ClientDetail />} />
-                      <Route path="/calendrier" element={<Calendrier />} />
-                      <Route path="/messagerie" element={<div className="h-[calc(100vh-120px)] -m-6"><Messagerie /></div>} />
-                      <Route path="/notifications" element={<Notifications />} />
-                      <Route path="/parametre" element={<Parametre />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </div>
+          <div className="p-6">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/interventions" element={<Interventions />} />
+              <Route path="/interventions/:id" element={<InterventionDetail />} />
+              <Route path="/artisans" element={<Artisans />} />
+              <Route path="/artisans/:id" element={<ArtisanDetail />} />
+              <Route path="/clients" element={<Clients />} />
+              <Route path="/clients/:id" element={<ClientDetail />} />
+              <Route path="/calendrier" element={<Calendrier />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/parametre" element={<Parametre />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </main>
       </div>
-      
-      {/* Aperçu global du drag & drop */}
-      <DragPreview
-        isVisible={isDragging}
-        position={dragPosition}
-        item={draggedItem}
-      />
     </SidebarProvider>
   );
 };
@@ -80,9 +67,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-          <DragAndDropProvider>
-            <AppContent />
-          </DragAndDropProvider>
+          <AppContent />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { InterventionsAPI } from '@/services/api';
 import { useSearchParams } from 'react-router-dom';
-import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -38,7 +37,6 @@ export const Interventions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -200,20 +198,20 @@ export const Interventions: React.FC = () => {
                   className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                   onClick={() => setSelectedIntervention(intervention)}
                   onMouseDown={(e) => {
-                    startDrag({
-                      type: 'intervention',
-                      id: intervention.id,
-                      name: `Intervention ${intervention.id}`,
-                      data: intervention
-                    }, e);
+                    // startDrag({
+                    //   type: 'intervention',
+                    //   id: intervention.id,
+                    //   name: `Intervention ${intervention.id}`,
+                    //   data: intervention
+                    // }, e);
                   }}
                   onTouchStart={(e) => {
-                    startTouchDrag({
-                      type: 'intervention',
-                      id: intervention.id,
-                      name: `Intervention ${intervention.id}`,
-                      data: intervention
-                    }, e);
+                    // startTouchDrag({
+                    //   type: 'intervention',
+                    //   id: intervention.id,
+                    //   name: `Intervention ${intervention.id}`,
+                    //   data: intervention
+                    // }, e);
                   }}
                   title="Maintenez 1 seconde pour glisser"
                 >

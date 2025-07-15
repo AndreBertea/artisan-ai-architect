@@ -26,7 +26,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ArtisansAPI, InterventionsAPI } from '@/services/api';
 import { useSearchParams } from 'react-router-dom';
-import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useRef } from 'react';
@@ -111,7 +110,6 @@ export const Artisans: React.FC = () => {
   const [selectedArtisan, setSelectedArtisan] = useState<Artisan | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
   // Champs du formulaire (états pour chaque champ)
@@ -729,19 +727,21 @@ export const Artisans: React.FC = () => {
                     className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                     onClick={() => setSelectedArtisan(artisan)}
                     onMouseDown={(e) => {
-                      startDrag({
-                        type: 'artisan',
-                        id: artisan.id,
-                        name: artisan.nom,
-                        data: artisan
-                      }, e);
+                      // startDrag({
+                      //   type: 'artisan',
+                      //   id: artisan.id,
+                      //   name: artisan.nom,
+                      //   data: artisan
+                      // }, e);
                     }}
-                    onTouchStart={(e) => startTouchDrag({
-                      type: 'artisan',
-                      id: artisan.id,
-                      name: artisan.nom,
-                      data: artisan
-                    }, e)}
+                    onTouchStart={(e) => {
+                      // startTouchDrag({
+                      //   type: 'artisan',
+                      //   id: artisan.id,
+                      //   name: artisan.nom,
+                      //   data: artisan
+                      // }, e);
+                    }}
                     title="Maintenez 1 seconde pour glisser"
                   >
                     <div className="flex items-center space-x-4">
@@ -850,20 +850,22 @@ export const Artisans: React.FC = () => {
                     className="p-3 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                     onClick={() => setSelectedIntervention(intervention)}
                     onMouseDown={(e) => {
-                      e.stopPropagation();
-                      startDrag({
-                        type: 'intervention',
-                        id: intervention.id,
-                        name: `Intervention ${intervention.id}`,
-                        data: intervention
-                      }, e);
+                      // e.stopPropagation();
+                      // startDrag({
+                      //   type: 'intervention',
+                      //   id: intervention.id,
+                      //   name: `Intervention ${intervention.id}`,
+                      //   data: intervention
+                      // }, e);
                     }}
-                    onTouchStart={(e) => startTouchDrag({
-                      type: 'intervention',
-                      id: intervention.id,
-                      name: `Intervention ${intervention.id}`,
-                      data: intervention
-                    }, e)}
+                    onTouchStart={(e) => {
+                      // startTouchDrag({
+                      //   type: 'intervention',
+                      //   id: intervention.id,
+                      //   name: `Intervention ${intervention.id}`,
+                      //   data: intervention
+                      // }, e);
+                    }}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -908,20 +910,20 @@ export const Artisans: React.FC = () => {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle 
               className="cursor-grab active:cursor-grabbing"
-              onMouseDown={(e) => {
-                startDrag({
-                  type: 'intervention',
-                  id: selectedIntervention.id,
-                  name: `Intervention ${selectedIntervention.id}`,
-                  data: selectedIntervention
-                }, e);
-              }}
-              onTouchStart={(e) => startTouchDrag({
-                type: 'intervention',
-                id: selectedIntervention.id,
-                name: `Intervention ${selectedIntervention.id}`,
-                data: selectedIntervention
-              }, e)}
+              // onMouseDown={(e) => {
+              //   startDrag({
+              //     type: 'intervention',
+              //     id: selectedIntervention.id,
+              //     name: `Intervention ${selectedIntervention.id}`,
+              //     data: selectedIntervention
+              //   }, e);
+              // }}
+              // onTouchStart={(e) => startTouchDrag({
+              //   type: 'intervention',
+              //   id: selectedIntervention.id,
+              //   name: `Intervention ${selectedIntervention.id}`,
+              //   data: selectedIntervention
+              // }, e)}
             >
               Intervention #{selectedIntervention.id}
             </CardTitle>

@@ -7,7 +7,7 @@ import { useSearch } from '../hooks/useSearch';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AiAnswerModal } from '../../ai/pages/AiAnswerModal';
 import { aiApi } from '../../ai/ai.api';
-import { useDragAndDrop } from '@/contexts/DragAndDropContext';
+// SUPPRESSION: import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 
 export const SearchBar: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -23,7 +23,7 @@ export const SearchBar: React.FC = () => {
   const location = useLocation();
   
   const { results, isLoading, search } = useSearch();
-  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
+  // SUPPRESSION: const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
 
   // Filtres disponibles par page
   const getAvailableFilters = () => {
@@ -373,14 +373,16 @@ export const SearchBar: React.FC = () => {
                           e.preventDefault();
                           
                           // Démarrer le drag
-                          startDrag({
-                            type: result.type,
-                            id: result.id,
-                            name: result.label,
-                            data: result
-                          }, e);
+                          // SUPPRESSION: startDrag({
+                          // SUPPRESSION:   type: result.type,
+                          // SUPPRESSION:   id: result.id,
+                          // SUPPRESSION:   name: result.label,
+                          // SUPPRESSION:   data: result
+                          // SUPPRESSION: }, e);
                         }}
-                        onTouchStart={(e) => startTouchDrag(result, e)}
+                        onTouchStart={(e) => {
+                          // SUPPRESSION: startTouchDrag(result, e);
+                        }}
                         title="Maintenez 1 seconde pour glisser"
                       >
                         <div className="text-left">

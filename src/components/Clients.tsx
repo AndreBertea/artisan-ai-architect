@@ -7,9 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Star, Search, MapPin, X, ExternalLink, Filter, Download } from "lucide-react";
 import { ClientsAPI, InterventionsAPI } from "@/services/api";
 import { useSearchParams } from 'react-router-dom';
-import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { useNavigate } from 'react-router-dom';
-import { DragPreview } from '@/components/DragPreview';
 
 interface Client {
   id: string;
@@ -51,7 +49,6 @@ export function Clients() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -213,20 +210,20 @@ export function Clients() {
                 className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
                 onClick={() => setSelectedClient(client)}
                 onMouseDown={(e) => {
-                  startDrag({
-                    type: 'client',
-                    id: client.id,
-                    name: client.nom,
-                    data: client
-                  }, e);
+                  // startDrag({
+                  //   type: 'client',
+                  //   id: client.id,
+                  //   name: client.nom,
+                  //   data: client
+                  // }, e);
                 }}
                 onTouchStart={(e) => {
-                  startTouchDrag({
-                    type: 'client',
-                    id: client.id,
-                    name: client.nom,
-                    data: client
-                  }, e);
+                  // startTouchDrag({
+                  //   type: 'client',
+                  //   id: client.id,
+                  //   name: client.nom,
+                  //   data: client
+                  // }, e);
                 }}
                 title="Maintenez 1 seconde pour glisser"
               >
