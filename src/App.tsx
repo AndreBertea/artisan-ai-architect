@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from './theme/ThemeProvider';
 import { AppSidebar } from '@/components/ui/AppSidebar';
 import { Dashboard } from '@/components/Dashboard';
 import { Interventions } from '@/components/Interventions';
@@ -61,7 +61,7 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+  <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />

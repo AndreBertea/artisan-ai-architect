@@ -16,6 +16,62 @@
     <meta name="twitter:site" content="@gmbs" />
     <meta name="twitter:image" content="/logo-gmbs.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <script>
+      (function () {
+        const PALETTES = [
+          ["#3F756C", "#F6EECD", "#E1C789", "#C6743E"],
+          ["#283D22", "#B4B66F", "#F1F0CC", "#93B5AF"],
+          ["#83BBC1", "#E7DDC7", "#B92C0D", "#1F2C24"],
+          ["#1B4D3E", "#EA362A", "#F1F0CC", "#C6C596"],
+          ["#9CADB3", "#CFDADA", "#EBF2F2", "#BBD5D8"],
+          ["#232E3F", "#CF9421", "#EEECE3", "#DAD5C6"]
+        ];
+        function hexToHSL(hex) {
+          hex = hex.replace('#', '');
+          let r = parseInt(hex.substring(0,2), 16) / 255;
+          let g = parseInt(hex.substring(2,4), 16) / 255;
+          let b = parseInt(hex.substring(4,6), 16) / 255;
+          let max = Math.max(r, g, b), min = Math.min(r, g, b);
+          let h, s, l = (max + min) / 2;
+          if(max === min){ h = s = 0; }
+          else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch(max){
+              case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+              case g: h = (b - r) / d + 2; break;
+              case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+          }
+          h = Math.round(h*360); s = Math.round(s*100); l = Math.round(l*100);
+          return `${h} ${s}% ${l}%`;
+        }
+        const id = parseInt(localStorage.getItem('themeId'), 10);
+        if (isNaN(id)) return;
+        document.documentElement.classList.remove('dark');
+        for (let i = 0; i < 6; i++) document.documentElement.classList.remove('palette-'+i);
+        if (id === 2) document.documentElement.classList.add('dark');
+        else if (id >= 3) document.documentElement.classList.add('palette-'+(id-3));
+        if (id >= 3) {
+          const p = PALETTES[id-3];
+          if (p) {
+            const set = (k,v)=>document.documentElement.style.setProperty(k,v);
+            const [c0,c1,c2,c3]=p.map(hexToHSL);
+            set("--background",c1); set("--foreground",c0);
+            set("--card",c1); set("--card-foreground",c0);
+            set("--popover",c1); set("--popover-foreground",c0);
+            set("--primary",c0); set("--primary-foreground",c1);
+            set("--secondary",c2); set("--secondary-foreground",c0);
+            set("--accent",c2); set("--accent-foreground",c0);
+            set("--muted",c2); set("--muted-foreground",c0);
+            set("--destructive",c3); set("--destructive-foreground",c1);
+            set("--border",c0); set("--input",c0); set("--ring",c3);
+            set("--sidebar-background",c0); set("--sidebar-foreground",c1);
+          }
+        }
+      })();
+    </script>
   </head>
 
   <body>

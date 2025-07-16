@@ -1,3 +1,7 @@
+html.disable-transitions *, html.disable-transitions {
+  transition: none !important;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +43,10 @@
 
 .read-the-docs {
   color: #888;
+}
+
+body.theme-changing {
+  transition: opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none; /* optionnel, bloque les interactions pendant le fondu */
 }

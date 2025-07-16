@@ -8,7 +8,8 @@ import { LogOut } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Eye, EyeOff, X, Wrench } from 'lucide-react';
+import { Eye, EyeOff, X, Wrench, Sun, Moon } from 'lucide-react';
+import { useThemeId } from "@/theme/ThemeProvider";
 
 // Petit composant pour la bulle de couleur utilisateur
 const UserColorBubble = ({ color, username }: { color: string, username: string }) => {
@@ -39,6 +40,7 @@ const PALETTES = [
   ["#1B4D3E", "#EA362A", "#F1F0CC", "#C6C596"],
   ["#9CADB3", "#CFDADA", "#EBF2F2", "#BBD5D8"],
   ["#232E3F", "#CF9421", "#EEECE3", "#DAD5C6"]
+
 ];
 
 // Utilitaire pour convertir hex en hsl string
@@ -286,11 +288,6 @@ function applyPalette(palette, idx) {
   }
 }
 
-function resetPalette() {
-  // On enlève les overrides pour revenir au thème clair/sombre natif
-  PALETTE_VARS.forEach(v => document.documentElement.style.removeProperty(v));
-}
-
 export function Parametre() {
   const { fullName, initials, email } = useAuth();
   // --- État local utilisateurs et rôles dynamiques ---
@@ -323,20 +320,7 @@ export function Parametre() {
 
   const [editUser, setEditUser] = useState<any | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedPalette, setSelectedPalette] = useState<number|null>(() => {
-    const saved = localStorage.getItem('selectedPalette');
-    return saved !== null && !isNaN(Number(saved)) ? Number(saved) as number : null;
-  });
-
-  useEffect(() => {
-    if (selectedPalette === null) {
-      resetPalette();
-      localStorage.removeItem('selectedPalette');
-    } else {
-      applyPalette(PALETTES[selectedPalette], selectedPalette);
-      localStorage.setItem('selectedPalette', String(selectedPalette));
-    }
-  }, [selectedPalette]);
+  const { themeId, setThemeId } = useThemeId();
 
   const handleLogout = () => {
     // TODO: Implement logout logic
@@ -408,15 +392,16 @@ export function Parametre() {
           <div className="flex items-center justify-between pt-4">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">Thème</span>
-              <ThemeToggle onClick={() => setSelectedPalette(null)} />
+              {/* Utiliser ThemeToggle pour le switch clair/sombre */}
+              <ThemeToggle />
               {/* Boutons palettes */}
               <div className="flex space-x-2 ml-4">
                 {PALETTES.map((palette, idx) => (
                   <button
                     key={idx}
-                    className={`flex items-center space-x-0.5 rounded-full border-2 p-1 transition-all ${selectedPalette===idx ? 'border-primary' : 'border-gray-300'}`}
-                    style={{ outline: selectedPalette===idx ? '2px solid #3F756C' : 'none' }}
-                    onClick={() => setSelectedPalette(idx)}
+                    className={`flex items-center space-x-0.5 rounded-full border-2 p-1 transition-all ${themeId === idx + 3 ? 'border-primary' : 'border-gray-300'}`}
+                    style={{ outline: themeId === idx + 3 ? '2px solid #3F756C' : 'none' }}
+                    onClick={() => setThemeId(idx + 3)}
                     title={`Palette ${idx+1}`}
                   >
                     {palette.map((color, i) => (
