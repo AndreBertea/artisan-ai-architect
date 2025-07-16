@@ -1,100 +1,65 @@
-CRM GMBS - Page dédiée au CRM du client
+# Développement de l’onglet Intervention
 
-Application CRM moderne pour la gestion d'artisans et d'interventions.
+## 🎯 Objectif de la branche
 
-🏗️ Architecture
-Frontend
+Développer l’intégralité de l’onglet « Intervention » de l’application, incluant :
+- L’interface utilisateur (UI/UX)
+- La logique métier (affichage, création, édition, suppression…)
+- L’intégration avec l’API/backend
+- Les tests et la documentation associée
 
-    React 18 + TypeScript 5 + Vite
-    shadcn/ui + Tailwind CSS
-    React Query + Zustand
-    React Router DOM
+---
 
-🚀 Déploiement Rapide
-Prérequis
+## 🗂️ Organisation des sous-branches
 
-    Node.js 18+
+La branche `feature/intervention` sert de **branche parent**. Les développements spécifiques se feront dans des sous-branches :
 
-Installation
+- `feature/intervention/layout`  
+  Pour tout ce qui concerne la structure, le design, les composants visuels de l’onglet Intervention.
 
-    Cloner le projet
+- `feature/intervention/setup`  
+  Pour la configuration initiale : création des fichiers, routes, intégration API, mock data, etc.
 
-git clone https://github.com/AndreBertea/artisan-ai-architect.git
-cd artisan-ai-architect
+- D’autres sous-branches pourront être créées selon les besoins, par exemple :
+  - `feature/intervention/logic` (logique métier)
+  - `feature/intervention/tests` (tests unitaires/fonctionnels)
+  - `feature/intervention/api` (intégration API spécifique)
 
-    Installer les dépendances
+Chaque sous-branche sera mergée dans `feature/intervention` une fois validée.
 
-npm install
+---
 
-    Lancer l'application
+## 📝 Plan de travail (exemple)
 
-npm run dev
+1. **Setup initial**
+   - Création des fichiers de page et composants de base
+   - Ajout des routes nécessaires
+   - Mock des données d’intervention
 
-    Accéder à l'application
+2. **Layout & UI**
+   - Structure de la page (header, liste, sidebar, modals…)
+   - Composants réutilisables (cartes, badges, boutons…)
 
-    Frontend: http://localhost:3001
+3. **Fonctionnalités**
+   - Affichage de la liste des interventions
+   - Détail d’une intervention
+   - Ajout/édition/suppression d’intervention
+   - Filtres, recherche, pagination
 
-Compte par défaut
+4. **Intégration API**
+   - Connexion avec le backend pour CRUD interventions
+   - Gestion des erreurs et des états de chargement
 
-    Email: admin@artisan-ai.com
-    Mot de passe: admin123
+5. **Tests & documentation**
+   - Tests unitaires et d’intégration
+   - Documentation technique et fonctionnelle
 
-📁 Structure du Projet
+---
 
-artisan-ai-architect/
-├── src/                    # Frontend React
-│   ├── components/         # Composants UI
-│   ├── features/           # Fonctionnalités (AI, Messaging, Search)
-│   ├── services/           # API mockées
-│   └── ...
-└── ...
+## ✅ Bonnes pratiques
 
-🔧 Développement
-
-npm install
-npm run dev
-
-🏢 Fonctionnalités principales
-
-    Gestion des artisans et interventions
-    Recherche sémantique avec IA
-    Authentification JWT (mockée)
-
-🤖 IA Intégrée
-
-    Recherche sémantique avec embeddings
-    Assistant IA pour les questions
-
-📊 API Endpoints (mockés)
-
-    POST /api/v1/auth/login - Connexion
-    POST /api/v1/auth/register - Inscription
-    GET /api/v1/auth/profile - Profil utilisateur
-    GET /api/v1/interventions - Liste des interventions
-    POST /api/v1/interventions - Créer une intervention
-    GET /api/v1/interventions/:id - Détails intervention
-    PATCH /api/v1/interventions/:id - Modifier intervention
-    DELETE /api/v1/interventions/:id - Supprimer intervention
-
-🔒 Sécurité (mockée)
-
-    JWT avec expiration
-    bcrypt pour les mots de passe
-    CORS configuré
-    Rate limiting
-    Validation des entrées
-    Soft delete pour les données
-
-📝 Licence
-
-MIT License - Voir LICENSE pour plus de détails.
-
-🤝 Contribution
-
-    Fork le projet
-    Créer une branche feature
-    Commit vos changements
-    Push vers la branche
-    Ouvrir une Pull Request
-
-CRM GMBS - Page dédiée au CRM du client 🛠️
+- Toujours partir de la dernière version de `feature/intervention` avant de créer une sous-branche.
+- Faire des PR claires et bien documentées vers la branche parent.
+- Garder des commits propres et explicites.
+- Tester localement avant de merger.
+- Mettre à jour ce README au fur et à mesure de l’avancement. 
