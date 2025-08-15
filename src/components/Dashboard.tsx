@@ -23,10 +23,11 @@ interface DashboardStats {
 
 interface Alert {
   id: string;
-  type: 'retard' | 'devis_manquant' | 'artisan_injoignable';
+  type: 'retard' | 'devis_manquant' | 'artisan_injoignable' | 'artisan_indisponible';
   message: string;
   severity: 'low' | 'medium' | 'high';
-  intervention_id: string;
+  intervention_id?: string;
+  artisan_id?: string;
 }
 
 export const Dashboard: React.FC = () => {
