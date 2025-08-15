@@ -9,14 +9,11 @@ import {
   Filter, 
   Download, 
   MoreHorizontal,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   ExternalLink,
   Plus
 } from 'lucide-react';
-import { InterventionsAPI } from '@/services/api';
+import { StatusBadge } from '@/components/ui/BadgeComponents';
+import { InterventionAPI } from '@/services/interventionApi';
 import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -27,10 +24,20 @@ interface Intervention {
   id: string;
   client: string;
   artisan: string;
+  artisan_metier?: string;
+  agence?: string;
+  utilisateur_assigné?: string;
+  reference?: string;
   statut: 'demande' | 'en_cours' | 'termine' | 'bloque';
   cree: string;
   echeance: string;
   description: string;
+  montant?: number;
+  adresse?: string;
+  notes?: string;
+  coutSST?: number;
+  coutMateriaux?: number;
+  coutInterventions?: number;
 }
 
 export const Interventions: React.FC = () => {
@@ -46,13 +53,13 @@ export const Interventions: React.FC = () => {
   useEffect(() => {
     const loadInterventions = async () => {
       try {
-        const data = await InterventionsAPI.getList({ page: 1 });
-        setInterventions(data.data);
+        const data = await InterventionAPI.getAll();
+        setInterventions(data);
         
         // Vérifier si une intervention est sélectionnée via l'URL
         const selectedId = searchParams.get('selected');
         if (selectedId) {
-          const intervention = data.data.find((i: Intervention) => i.id === selectedId);
+          const intervention = data.find((i: Intervention) => i.id === selectedId);
           if (intervention) {
             setSelectedIntervention(intervention);
           }
@@ -74,8 +81,8 @@ export const Interventions: React.FC = () => {
         // Recharger les données originales d'abord
         const loadOriginalData = async () => {
           try {
-            const data = await InterventionsAPI.getList({ page: 1 });
-            const originalInterventions = data.data;
+            const data = await InterventionAPI.getAll();
+            const originalInterventions = data;
             // Appliquer le filtre
             const filtered = originalInterventions.filter((intervention: Intervention) => {
               switch (filterKey) {
@@ -105,24 +112,7 @@ export const Interventions: React.FC = () => {
     };
   }, []);
 
-  const getStatusBadge = (statut: string) => {
-    const statusConfig = {
-      demande: { variant: 'secondary', icon: Clock, color: 'text-blue-600' },
-      en_cours: { variant: 'secondary', icon: AlertCircle, color: 'text-orange-600' },
-      termine: { variant: 'secondary', icon: CheckCircle, color: 'text-green-600' },
-      bloque: { variant: 'destructive', icon: XCircle, color: 'text-red-600' }
-    };
-
-    const config = statusConfig[statut as keyof typeof statusConfig];
-    const Icon = config.icon;
-
-    return (
-      <Badge variant={config.variant as any} className={config.color}>
-        <Icon className="h-3 w-3 mr-1" />
-        {statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ')}
-      </Badge>
-    );
-  };
+  // Suppression de getStatusBadge car maintenant on utilise StatusBadge de BadgeComponents
 
   const filteredInterventions = interventions.filter(intervention =>
     intervention.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,59 +142,141 @@ export const Interventions: React.FC = () => {
     // Ici vous pouvez implémenter l'ajout de document
   };
 
-  const handleStatusChange = (intervention: Intervention, newStatus: string) => {
-    console.log('Changement de statut pour:', intervention.id, 'vers:', newStatus);
-    // Ici vous pouvez implémenter le changement de statut
+  const handleStatusChange = async (intervention: Intervention, newStatus: string) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateStatus(intervention.id, newStatus as any);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour statut:', error);
+    }
   };
 
-  const handleAmountChange = (intervention: Intervention, amount: number) => {
-    console.log('Changement de montant pour:', intervention.id, 'nouveau montant:', amount);
-    // Ici vous pouvez implémenter le changement de montant
+  const handleAmountChange = async (intervention: Intervention, amount: number) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateMontant(intervention.id, amount);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour montant:', error);
+    }
   };
 
-  const handleDateChange = (intervention: Intervention, field: string, date: string) => {
-    console.log('Changement de date pour:', intervention.id, 'champ:', field, 'date:', date);
-    // Ici vous pouvez implémenter le changement de date
+  const handleDateChange = async (intervention: Intervention, field: string, date: string) => {
+    try {
+      let updatedIntervention;
+      if (field === 'echeance') {
+        updatedIntervention = await InterventionAPI.updateEcheance(intervention.id, date);
+      }
+      if (updatedIntervention) {
+        setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+        if (selectedIntervention?.id === intervention.id) {
+          setSelectedIntervention(updatedIntervention);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour date:', error);
+    }
   };
 
-  const handleAddressChange = (intervention: Intervention, address: string) => {
-    console.log('Changement d\'adresse pour:', intervention.id, 'nouvelle adresse:', address);
-    // Ici vous pouvez implémenter le changement d'adresse
+  const handleAddressChange = async (intervention: Intervention, address: string) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateAddress(intervention.id, address);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour adresse:', error);
+    }
   };
 
-  const handleArtisanChange = (intervention: Intervention, artisan: string) => {
-    console.log('Changement d\'artisan pour:', intervention.id, 'nouvel artisan:', artisan);
-    // Ici vous pouvez implémenter le changement d'artisan
+  const handleArtisanChange = async (intervention: Intervention, artisan: string) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateArtisan(intervention.id, artisan);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour artisan:', error);
+    }
   };
 
-  const handleClientChange = (intervention: Intervention, client: string) => {
-    console.log('Changement de client pour:', intervention.id, 'nouveau client:', client);
-    // Ici vous pouvez implémenter le changement de client
+  const handleClientChange = async (intervention: Intervention, client: string) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateClient(intervention.id, client);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour client:', error);
+    }
   };
 
-  const handleDescriptionChange = (intervention: Intervention, description: string) => {
-    console.log('Changement de description pour:', intervention.id, 'nouvelle description:', description);
-    // Ici vous pouvez implémenter le changement de description
+  const handleDescriptionChange = async (intervention: Intervention, description: string) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateDescription(intervention.id, description);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour description:', error);
+    }
   };
 
-  const handleNotesChange = (intervention: Intervention, notes: string) => {
-    console.log('Changement de notes pour:', intervention.id, 'nouvelles notes:', notes);
-    // Ici vous pouvez implémenter le changement de notes
+  const handleNotesChange = async (intervention: Intervention, notes: string) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateNotes(intervention.id, notes);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour notes:', error);
+    }
   };
 
-  const handleCoutSSTChange = (intervention: Intervention, amount: number) => {
-    console.log('Changement de coût SST pour:', intervention.id, 'nouveau montant:', amount);
-    // Ici vous pouvez implémenter le changement de coût SST
+  const handleCoutSSTChange = async (intervention: Intervention, amount: number) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateCoutSST(intervention.id, amount);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour coût SST:', error);
+    }
   };
 
-  const handleCoutMateriauxChange = (intervention: Intervention, amount: number) => {
-    console.log('Changement de coût matériaux pour:', intervention.id, 'nouveau montant:', amount);
-    // Ici vous pouvez implémenter le changement de coût matériaux
+  const handleCoutMateriauxChange = async (intervention: Intervention, amount: number) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateCoutMateriaux(intervention.id, amount);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour coût matériaux:', error);
+    }
   };
 
-  const handleCoutInterventionsChange = (intervention: Intervention, amount: number) => {
-    console.log('Changement de coût interventions pour:', intervention.id, 'nouveau montant:', amount);
-    // Ici vous pouvez implémenter le changement de coût interventions
+  const handleCoutInterventionsChange = async (intervention: Intervention, amount: number) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateCoutInterventions(intervention.id, amount);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour coût interventions:', error);
+    }
   };
 
   return (
@@ -313,6 +385,9 @@ export const Interventions: React.FC = () => {
             onDateChange={handleDateChange}
             onAddressChange={handleAddressChange}
             onArtisanChange={handleArtisanChange}
+            onCoutSSTChange={handleCoutSSTChange}
+            onCoutMateriauxChange={handleCoutMateriauxChange}
+            onCoutInterventionsChange={handleCoutInterventionsChange}
             className="h-full overflow-y-auto"
           />
         </div>

@@ -39,6 +39,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
+import { EditableCell } from '@/components/ui/EditableCell';
+import { calculateMarge, formatCurrency } from '@/services/interventionApi';
 
 interface Intervention {
   id: string;
@@ -50,6 +52,9 @@ interface Intervention {
   description: string;
   montant?: number;
   adresse?: string;
+  coutSST?: number;
+  coutMateriaux?: number;
+  coutInterventions?: number;
 }
 
 interface InterventionDetailCardProps {
@@ -64,6 +69,9 @@ interface InterventionDetailCardProps {
   onDateChange?: (intervention: Intervention, field: string, date: string) => void;
   onAddressChange?: (intervention: Intervention, address: string) => void;
   onArtisanChange?: (intervention: Intervention, artisan: string) => void;
+  onCoutSSTChange?: (intervention: Intervention, amount: number) => void;
+  onCoutMateriauxChange?: (intervention: Intervention, amount: number) => void;
+  onCoutInterventionsChange?: (intervention: Intervention, amount: number) => void;
   className?: string;
 }
 
@@ -79,6 +87,9 @@ export const InterventionDetailCard: React.FC<InterventionDetailCardProps> = ({
   onDateChange,
   onAddressChange,
   onArtisanChange,
+  onCoutSSTChange,
+  onCoutMateriauxChange,
+  onCoutInterventionsChange,
   className = ''
 }) => {
   const navigate = useNavigate();
@@ -167,12 +178,6 @@ export const InterventionDetailCard: React.FC<InterventionDetailCardProps> = ({
       case 'status-bloque':
         onStatusChange?.(intervention, 'bloque');
         break;
-      case 'amount-increase':
-        onAmountChange?.(intervention, (intervention.montant || 0) + 100);
-        break;
-      case 'amount-decrease':
-        onAmountChange?.(intervention, Math.max(0, (intervention.montant || 0) - 100));
-        break;
       case 'date-created':
         onDateChange?.(intervention, 'cree', new Date().toISOString());
         break;
@@ -191,6 +196,10 @@ export const InterventionDetailCard: React.FC<InterventionDetailCardProps> = ({
       default:
         console.log(`Action ${action} pour l'intervention ${intervention.id}`, data);
     }
+  };
+
+  const getMarge = () => {
+    return calculateMarge(intervention);
   };
 
   const colors = getHoverColors();
@@ -329,6 +338,107 @@ export const InterventionDetailCard: React.FC<InterventionDetailCardProps> = ({
           </div>
         </div>
 
+        {/* Section Coûts et Marges - Édition directe */}
+        <div>
+          <h3 className="font-semibold text-sm text-muted-foreground mb-4">Coûts et Marges</h3>
+          
+          {/* Coûts et édition de marge */}
+          <div className="space-y-4 mb-6">
+            <div className="bg-background/50 rounded-lg p-4 border">
+              {/* Première ligne : Coûts de base */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-background/80 rounded-lg p-3 border">
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">SST</div>
+                    <EditableCell
+                      value={intervention.coutSST || 0}
+                      onChange={(newValue) => onCoutSSTChange?.(intervention, newValue)}
+                      type="currency"
+                      className="text-blue-600"
+                    />
+                  </div>
+                </div>
+                
+                <div className="bg-background/80 rounded-lg p-3 border">
+                  <div className="space-y-2">
+                    <div className="text-xs font-medium text-muted-foreground">Matériaux</div>
+                    <EditableCell
+                      value={intervention.coutMateriaux || 0}
+                      onChange={(newValue) => onCoutMateriauxChange?.(intervention, newValue)}
+                      type="currency"
+                      className="text-purple-600"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Deuxième ligne : Résumé et édition de marge */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Coûts déduits:</span>
+                  <div className="font-semibold text-red-600">
+                    {formatCurrency((intervention.coutSST || 0) + (intervention.coutMateriaux || 0))}
+                  </div>
+                </div>
+                <div className="relative group">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Marge actuelle:</span>
+                    <div className="flex items-center gap-2">
+                      <div className={`font-semibold ${getMarge() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(getMarge())} ({intervention.coutInterventions > 0 ? Math.round((getMarge() / intervention.coutInterventions) * 100) : 0}%)
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 hover:bg-green-100 hover:text-green-600"
+                        title="Éditer la marge"
+                      >
+                        <Settings className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Menu d'édition rapide au hover - Positionné à droite */}
+                  <div className="absolute top-0 right-0 mt-8 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 z-50 p-4 min-w-[200px] transform translate-x-2">
+                    <div className="text-xs font-medium text-muted-foreground mb-3">Édition rapide de la marge</div>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-muted-foreground">Marge en €</div>
+                        <div className="bg-gray-100 rounded px-3 py-2">
+                          <EditableCell
+                            value={getMarge()}
+                            onChange={(newMargin) => {
+                              const newInterventionPrice = (intervention.coutSST || 0) + (intervention.coutMateriaux || 0) + newMargin;
+                              onCoutInterventionsChange?.(intervention, Math.round(newInterventionPrice * 100) / 100);
+                            }}
+                            type="currency"
+                            className="text-green-600"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-muted-foreground">Pourcentage</div>
+                        <div className="bg-gray-100 rounded px-3 py-2">
+                          <EditableCell
+                            value={intervention.coutInterventions > 0 ? Math.round((getMarge() / intervention.coutInterventions) * 100) : 0}
+                            onChange={(newPercentage) => {
+                              const newInterventionPrice = ((intervention.coutSST || 0) + (intervention.coutMateriaux || 0)) / (1 - newPercentage / 100);
+                              onCoutInterventionsChange?.(intervention, Math.round(newInterventionPrice * 100) / 100);
+                            }}
+                            type="percentage"
+                            className="text-blue-600"
+                            max={99}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Section Actions rapides - Menu ultra-polyvalent */}
         <div>
           <h3 className="font-semibold text-sm text-muted-foreground mb-4">Actions rapides</h3>
@@ -368,34 +478,6 @@ export const InterventionDetailCard: React.FC<InterventionDetailCardProps> = ({
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 Bloqué
-              </Button>
-            </div>
-          </div>
-
-          {/* Montant */}
-          <div className="mb-6">
-            <h4 className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">Montant</h4>
-            <div className="flex items-center space-x-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                onClick={() => handleAction('amount-increase')}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                +100€
-              </Button>
-              <div className="flex-1 text-center font-bold text-lg text-green-600">
-                {intervention.montant ? `${intervention.montant}€` : '0€'}
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
-                onClick={() => handleAction('amount-decrease')}
-              >
-                <Minus className="h-4 w-4 mr-1" />
-                -100€
               </Button>
             </div>
           </div>
