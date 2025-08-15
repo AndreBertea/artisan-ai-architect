@@ -357,15 +357,15 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
         style={{ backgroundColor: statusConfig.iconColor }}
       />
 
-      <CardHeader className="pb-3">
+      <CardHeader className="py-2">
                 {/* Layout 3 colonnes responsive */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           
           {/* Colonne 1: Client */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <h3 
-                className="text-lg font-semibold text-foreground truncate flex-1"
+                className="text-xl font-semibold text-foreground truncate flex-1"
                 title={intervention.client}
               >
                 {intervention.client}
@@ -376,7 +376,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
               )}
             </div>
             
-            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed" title={intervention.description}>
+            <p className="text-base text-muted-foreground line-clamp-1 leading-snug" title={intervention.description}>
               {intervention.description}
             </p>
             
@@ -396,7 +396,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
           </div>
 
           {/* Colonne 2: Artisan & Statut */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Badge de statut cliquable */}
             <div className="relative status-menu-container">
               <button
@@ -489,7 +489,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
           </div>
 
           {/* Colonne 3: Actions & Infos */}
-          <div className="space-y-3 flex flex-col items-end">
+          <div className="space-y-2 flex flex-col items-end">
             {/* Actions - Desktop */}
             <div className="hidden lg:flex items-center gap-2">
               <Button
@@ -578,7 +578,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                 </div>
               )}
               
-              <div className="space-y-1 text-right">
+              <div className="space-y-0.5 text-right">
                 <div className="flex items-center gap-1 text-sm font-medium text-green-600 justify-end">
                   <Euro className="h-4 w-4" />
                   <span>{formatCurrency(getMarge())}</span>
@@ -591,17 +591,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
           </div>
         </div>
 
-        {/* Expand indicator */}
-        <div className="flex justify-center mt-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>Clic gauche : Détails | Clic droit : Ouvrir</span>
-            {isExpanded ? (
-              <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
-          </div>
-        </div>
+        {/* Compact spacing: remove helper text and reduce vertical gap */}
       </CardHeader>
 
       <CardContent className="pt-0">
@@ -680,8 +670,8 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                         <div className="text-xs font-medium text-gray-600 mb-3">Tous les statuts</div>
                         <div className="grid grid-cols-1 gap-2">
                           {allStatuses.map((status) => {
-                            const StatusIcon = status.icon;
-                            const isActive = intervention.statut === status.key;
+                  const StatusIcon = status.icon;
+                  const isActive = intervention.statut === status.key;
                             const statusColor = getStatusColor(status.key);
                             return (
                               <div key={status.key} className="flex items-center gap-2">
