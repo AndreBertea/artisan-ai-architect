@@ -18,9 +18,10 @@ import {
 } from 'lucide-react';
 import { InterventionsAPI } from '@/services/api';
 import { useSearchParams } from 'react-router-dom';
-import { useDragAndDrop } from '@/contexts/DragAndDropContext';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { InterventionCard } from '@/components/ui/InterventionCard';
+import { InterventionDetailCard } from '@/components/ui/InterventionDetailCard';
 
 interface Intervention {
   id: string;
@@ -38,9 +39,9 @@ export const Interventions: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
-  const { startDrag, startTouchDrag, draggedItem, isDragging, dragPosition } = useDragAndDrop();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+
 
   useEffect(() => {
     const loadInterventions = async () => {
@@ -129,6 +130,83 @@ export const Interventions: React.FC = () => {
     intervention.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+
+
+  // Handlers pour les actions du composant InterventionCard
+  const handleEditIntervention = (intervention: Intervention) => {
+    setSelectedIntervention(intervention);
+  };
+
+  const handleSendEmail = (intervention: Intervention) => {
+    console.log('Envoi email pour:', intervention.id);
+    // Ici vous pouvez implémenter l'envoi d'email
+  };
+
+  const handleCall = (intervention: Intervention) => {
+    console.log('Appel pour:', intervention.id);
+    // Ici vous pouvez implémenter l'appel
+  };
+
+  const handleAddDocument = (intervention: Intervention) => {
+    console.log('Ajout document pour:', intervention.id);
+    // Ici vous pouvez implémenter l'ajout de document
+  };
+
+  const handleStatusChange = (intervention: Intervention, newStatus: string) => {
+    console.log('Changement de statut pour:', intervention.id, 'vers:', newStatus);
+    // Ici vous pouvez implémenter le changement de statut
+  };
+
+  const handleAmountChange = (intervention: Intervention, amount: number) => {
+    console.log('Changement de montant pour:', intervention.id, 'nouveau montant:', amount);
+    // Ici vous pouvez implémenter le changement de montant
+  };
+
+  const handleDateChange = (intervention: Intervention, field: string, date: string) => {
+    console.log('Changement de date pour:', intervention.id, 'champ:', field, 'date:', date);
+    // Ici vous pouvez implémenter le changement de date
+  };
+
+  const handleAddressChange = (intervention: Intervention, address: string) => {
+    console.log('Changement d\'adresse pour:', intervention.id, 'nouvelle adresse:', address);
+    // Ici vous pouvez implémenter le changement d'adresse
+  };
+
+  const handleArtisanChange = (intervention: Intervention, artisan: string) => {
+    console.log('Changement d\'artisan pour:', intervention.id, 'nouvel artisan:', artisan);
+    // Ici vous pouvez implémenter le changement d'artisan
+  };
+
+  const handleClientChange = (intervention: Intervention, client: string) => {
+    console.log('Changement de client pour:', intervention.id, 'nouveau client:', client);
+    // Ici vous pouvez implémenter le changement de client
+  };
+
+  const handleDescriptionChange = (intervention: Intervention, description: string) => {
+    console.log('Changement de description pour:', intervention.id, 'nouvelle description:', description);
+    // Ici vous pouvez implémenter le changement de description
+  };
+
+  const handleNotesChange = (intervention: Intervention, notes: string) => {
+    console.log('Changement de notes pour:', intervention.id, 'nouvelles notes:', notes);
+    // Ici vous pouvez implémenter le changement de notes
+  };
+
+  const handleCoutSSTChange = (intervention: Intervention, amount: number) => {
+    console.log('Changement de coût SST pour:', intervention.id, 'nouveau montant:', amount);
+    // Ici vous pouvez implémenter le changement de coût SST
+  };
+
+  const handleCoutMateriauxChange = (intervention: Intervention, amount: number) => {
+    console.log('Changement de coût matériaux pour:', intervention.id, 'nouveau montant:', amount);
+    // Ici vous pouvez implémenter le changement de coût matériaux
+  };
+
+  const handleCoutInterventionsChange = (intervention: Intervention, amount: number) => {
+    console.log('Changement de coût interventions pour:', intervention.id, 'nouveau montant:', amount);
+    // Ici vous pouvez implémenter le changement de coût interventions
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -195,44 +273,25 @@ export const Interventions: React.FC = () => {
           ) : (
             <div className="space-y-2">
               {filteredInterventions.map((intervention) => (
-                <div
+                <InterventionCard
                   key={intervention.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
-                  onClick={() => setSelectedIntervention(intervention)}
-                  onMouseDown={(e) => {
-                    startDrag({
-                      type: 'intervention',
-                      id: intervention.id,
-                      name: `Intervention ${intervention.id}`,
-                      data: intervention
-                    }, e);
-                  }}
-                  onTouchStart={(e) => {
-                    startTouchDrag({
-                      type: 'intervention',
-                      id: intervention.id,
-                      name: `Intervention ${intervention.id}`,
-                      data: intervention
-                    }, e);
-                  }}
-                  title="Maintenez 1 seconde pour glisser"
-                >
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className="font-medium text-sm">#{intervention.id}</div>
-                    <div className="flex-1">
-                      <div className="font-medium">{intervention.client}</div>
-                      <div className="text-sm text-muted-foreground">{intervention.description}</div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">{intervention.artisan}</div>
-                    <div>{getStatusBadge(intervention.statut)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(intervention.cree).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </div>
+                  intervention={intervention}
+                  onEdit={handleEditIntervention}
+                  onSendEmail={handleSendEmail}
+                  onCall={handleCall}
+                  onAddDocument={handleAddDocument}
+                  onStatusChange={handleStatusChange}
+                  onAmountChange={handleAmountChange}
+                  onDateChange={handleDateChange}
+                  onAddressChange={handleAddressChange}
+                  onArtisanChange={handleArtisanChange}
+                  onClientChange={handleClientChange}
+                  onDescriptionChange={handleDescriptionChange}
+                  onNotesChange={handleNotesChange}
+                  onCoutSSTChange={handleCoutSSTChange}
+                  onCoutMateriauxChange={handleCoutMateriauxChange}
+                  onCoutInterventionsChange={handleCoutInterventionsChange}
+                />
               ))}
             </div>
           )}
@@ -241,62 +300,23 @@ export const Interventions: React.FC = () => {
 
       {/* Sidebar détail intervention */}
       {selectedIntervention && (
-        <Card className="fixed right-6 top-24 bottom-6 w-96 shadow-lg z-50">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>
-              Intervention #{selectedIntervention.id}
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => navigate(`/interventions/${selectedIntervention.id}`)}
-                title="Ouvrir en page complète"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setSelectedIntervention(null)}
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium mb-2">Détails</h4>
-              <div className="space-y-2 text-sm">
-                <div><strong>Client:</strong> {selectedIntervention.client}</div>
-                <div><strong>Artisan:</strong> {selectedIntervention.artisan}</div>
-                <div><strong>Statut:</strong> {getStatusBadge(selectedIntervention.statut)}</div>
-                <div><strong>Créé:</strong> {new Date(selectedIntervention.cree).toLocaleDateString()}</div>
-                <div><strong>Échéance:</strong> {new Date(selectedIntervention.echeance).toLocaleDateString()}</div>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="font-medium mb-2">Actions rapides</h4>
-              <div className="space-y-2">
-                <Button size="sm" className="w-full justify-start">
-                  Passer en cours
-                </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
-                  Générer mail artisan
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-medium mb-2">Timeline</h4>
-              <div className="h-32 bg-muted rounded-md flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">Timeline des étapes</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-              )}
+        <div className="fixed right-6 top-24 bottom-6 w-96 z-50">
+          <InterventionDetailCard
+            intervention={selectedIntervention}
+            onClose={() => setSelectedIntervention(null)}
+            onEdit={handleEditIntervention}
+            onSendEmail={handleSendEmail}
+            onCall={handleCall}
+            onAddDocument={handleAddDocument}
+            onStatusChange={handleStatusChange}
+            onAmountChange={handleAmountChange}
+            onDateChange={handleDateChange}
+            onAddressChange={handleAddressChange}
+            onArtisanChange={handleArtisanChange}
+            className="h-full overflow-y-auto"
+          />
+        </div>
+      )}
 
 
     </div>
