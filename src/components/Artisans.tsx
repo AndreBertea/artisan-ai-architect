@@ -112,6 +112,8 @@ export const Artisans: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [editingField, setEditingField] = useState<{id: string, field: string, value: string} | null>(null);
   // Champs du formulaire (états pour chaque champ)
   const [raisonSociale, setRaisonSociale] = useState('');
   const [nomArtisan, setNomArtisan] = useState('');
@@ -420,6 +422,52 @@ export const Artisans: React.FC = () => {
     artisan.specialite.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleArtisanHover = (artisan: Artisan) => {
+    // Annuler le timeout précédent s'il existe
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+    }
+    
+    // Délai de 500ms avant d'afficher la preview
+    const timeout = setTimeout(() => {
+      setSelectedArtisan(artisan);
+    }, 500);
+    
+    setHoverTimeout(timeout);
+  };
+
+  const handleArtisanLeave = () => {
+    // Annuler le timeout si on quitte avant les 500ms
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
+    
+    // Fermer la preview
+    setSelectedArtisan(null);
+  };
+
+  const handleArtisanClick = (artisan: Artisan) => {
+    // Clic simple - ouvrir directement la page complète
+    navigate(`/artisans/${artisan.id}`);
+  };
+
+  const handleArtisanDoubleClick = (artisan: Artisan, field: string, currentValue: string) => {
+    setEditingField({ id: artisan.id, field, value: currentValue });
+  };
+
+  const handleEditSave = () => {
+    if (editingField) {
+      // Ici vous pouvez ajouter la logique pour sauvegarder les modifications
+      console.log('Sauvegarde:', editingField);
+      setEditingField(null);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditingField(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -725,7 +773,7 @@ export const Artisans: React.FC = () => {
                   <div
                     key={artisan.id}
                     className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-accent/50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedArtisan(artisan)}
+                    onClick={() => handleArtisanClick(artisan)}
                     onMouseDown={(e) => {
                       // startDrag({
                       //   type: 'artisan',
@@ -742,7 +790,7 @@ export const Artisans: React.FC = () => {
                       //   data: artisan
                       // }, e);
                     }}
-                    title="Maintenez 1 seconde pour glisser"
+                    title="Clic pour sélectionner, double-clic pour ouvrir en page complète"
                   >
                     <div className="flex items-center space-x-4">
                       <Avatar>

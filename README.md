@@ -63,3 +63,5 @@ Chaque sous-branche sera mergée dans `feature/intervention` une fois validée.
 - Garder des commits propres et explicites.
 - Tester localement avant de merger.
 - Mettre à jour ce README au fur et à mesure de l’avancement. 
+
+voir
