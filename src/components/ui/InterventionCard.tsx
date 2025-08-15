@@ -23,6 +23,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { StatusBadge, MetierBadge, AgenceBadge, UserBadge, type InterventionStatus, type ArtisanMetier } from './BadgeComponents';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +36,7 @@ interface Intervention {
   id: string;
   client: string;
   artisan: string;
-  statut: 'demande' | 'en_cours' | 'termine' | 'bloque';
+  statut: InterventionStatus;
   cree: string;
   echeance: string;
   description: string;
@@ -45,6 +46,11 @@ interface Intervention {
   coutSST?: number;
   coutMateriaux?: number;
   coutInterventions?: number;
+  // Nouvelles propriétés
+  artisan_metier?: ArtisanMetier;
+  agence?: string;
+  utilisateur_assigné?: string;
+  reference?: string;
 }
 
 interface InterventionCardProps {
@@ -108,7 +114,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     return marge;
   };
 
-  const getStatusConfig = (statut: string) => {
+  const getStatusConfig = (statut: InterventionStatus) => {
     const configs = {
       demande: { 
         variant: 'secondary' as const, 
@@ -135,7 +141,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
         iconColor: 'text-red-500'
       }
     };
-    return configs[statut as keyof typeof configs] || configs.demande;
+    return configs[statut] || configs.demande;
   };
 
   const formatCurrency = (amount?: number) => {
@@ -179,18 +185,19 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       `} />
 
       <CardHeader className="pb-3">
-        {/* Header: ID + Status + Actions */}
+        {/* Header (ligne 1): Titre + Statut + Actions */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="font-mono text-sm font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
-              #{intervention.id}
-            </div>
-            <Badge className={`${statusConfig.color} border font-medium`}>
-              <StatusIcon className="h-3 w-3 mr-1" />
-              {intervention.statut.charAt(0).toUpperCase() + intervention.statut.slice(1).replace('_', ' ')}
-            </Badge>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <h3 
+              className="text-lg font-semibold text-foreground truncate cursor-pointer hover:text-primary transition-colors"
+              onClick={handleNavigateToDetail}
+              title={intervention.client}
+            >
+              {intervention.client}
+            </h3>
+            <StatusBadge status={intervention.statut} size="md" />
             {/* Expand indicator */}
-            <div className="flex items-center gap-2 ml-3">
+            <div className="flex items-center gap-2 ml-3 flex-shrink-0">
               {isExpanded ? (
                 <ChevronUp className="h-4 w-4 text-muted-foreground" />
               ) : (
@@ -201,7 +208,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
 
           {/* Actions Menu */}
           <div className={`
-            flex items-center gap-2 transition-all duration-300
+            flex items-center gap-2 transition-all duration-300 flex-shrink-0
             ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}
           `}>
             {/* Mobile: Dropdown Menu */}
@@ -284,88 +291,86 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       </CardHeader>
 
       <CardContent className="pt-0">
-        {/* Titre clickable pour navigation */}
-        <div 
-          className="mb-4 cursor-pointer group/title"
-          onClick={handleNavigateToDetail}
-        >
-          <h3 className="text-lg font-semibold text-foreground group-hover/title:text-primary transition-colors duration-200 line-clamp-1">
-            {intervention.client}
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-            {intervention.description}
-          </p>
+        {/* Description */}
+        <p className="text-sm text-muted-foreground mb-4 line-clamp-2" title={intervention.description}>
+          {intervention.description}
+        </p>
+
+        {/* Layout responsive: Desktop (≥768px) vs Mobile (<768px) */}
+        {/* Desktop: Layout horizontal */}
+        <div className="hidden md:block">
+          {/* Sous-titre (ligne 2): Artisan + Utilisateur */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-sm font-medium text-foreground truncate">
+                {intervention.artisan}
+              </span>
+              {intervention.artisan_metier && (
+                <MetierBadge metier={intervention.artisan_metier} size="sm" />
+              )}
+            </div>
+            <div className="flex-shrink-0">
+              {intervention.utilisateur_assigné && (
+                <UserBadge user={intervention.utilisateur_assigné} size="sm" />
+              )}
+            </div>
+          </div>
+
+          {/* Footer (ligne 3): Agence + Date/Référence */}
+          <div className="flex items-center justify-between">
+            <div className="flex-shrink-0">
+              {intervention.agence && (
+                <AgenceBadge agence={intervention.agence} size="sm" />
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {intervention.reference && (
+                <span className="font-mono" title={intervention.reference}>
+                  {intervention.reference}
+                </span>
+              )}
+              <span title={`Créé le ${formatDate(intervention.cree)}`}>
+                {formatDate(intervention.cree)}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Meta Grid - Responsive */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-          {/* Client & Artisan */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="min-w-0">
-                <div className="font-medium text-foreground truncate">{intervention.client}</div>
-                <div className="text-muted-foreground text-xs">Client</div>
-              </div>
-            </div>
+        {/* Mobile: Layout vertical empilé */}
+        <div className="md:hidden space-y-3">
+          {/* Sous-titre: Artisan + Métier */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-medium text-foreground">
+              {intervention.artisan}
+            </span>
+            {intervention.artisan_metier && (
+              <MetierBadge metier={intervention.artisan_metier} size="sm" />
+            )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="min-w-0">
-                <div className="font-medium text-foreground truncate">{intervention.artisan}</div>
-                <div className="text-muted-foreground text-xs">Artisan</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Adresse */}
-          {intervention.adresse && (
-            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-medium text-foreground truncate">{intervention.adresse}</div>
-                  <div className="text-muted-foreground text-xs">Adresse</div>
-                </div>
-              </div>
+          {/* Utilisateur assigné */}
+          {intervention.utilisateur_assigné && (
+            <div className="flex items-center">
+              <UserBadge user={intervention.utilisateur_assigné} size="sm" />
             </div>
           )}
 
-          {/* Dates */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="min-w-0">
-                <div className="font-medium text-foreground">{formatDate(intervention.cree)}</div>
-                <div className="text-muted-foreground text-xs">Créé</div>
-              </div>
+          {/* Footer: Agence + Date/Référence */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {intervention.agence && (
+              <AgenceBadge agence={intervention.agence} size="sm" />
+            )}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {intervention.reference && (
+                <span className="font-mono" title={intervention.reference}>
+                  {intervention.reference}
+                </span>
+              )}
+              <span title={`Créé le ${formatDate(intervention.cree)}`}>
+                {formatDate(intervention.cree)}
+              </span>
             </div>
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <div className="min-w-0">
-                <div className="font-medium text-foreground">{formatDate(intervention.echeance)}</div>
-                <div className="text-muted-foreground text-xs">Échéance</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Montant */}
-          {intervention.montant && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Euro className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0">
-                  <div className="font-medium text-green-600">{formatCurrency(intervention.montant)}</div>
-                  <div className="text-muted-foreground text-xs">Montant</div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Mobile Primary Action */}
@@ -403,30 +408,23 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">Statut de l'intervention</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { key: 'demande', label: 'Demande', icon: Clock, color: 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800' },
-                  { key: 'en_cours', label: 'En cours', icon: AlertCircle, color: 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800' },
-                  { key: 'termine', label: 'Terminé', icon: CheckCircle, color: 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' },
-                  { key: 'bloque', label: 'Bloqué', icon: XCircle, color: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800' }
-                ].map((status) => {
-                  const StatusIcon = status.icon;
-                  const isActive = intervention.statut === status.key;
+                {(['demande', 'en_cours', 'termine', 'bloque'] as const).map((status) => {
+                  const isActive = intervention.statut === status;
                   return (
                     <Button
-                      key={status.key}
+                      key={status}
                       variant={isActive ? "default" : "outline"}
                       size="sm"
                       className={`
                         h-10 justify-start transition-all duration-200
-                        ${isActive ? 'shadow-md' : status.color}
+                        ${isActive ? 'shadow-md' : ''}
                       `}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onStatusChange?.(intervention, status.key);
+                        onStatusChange?.(intervention, status);
                       }}
                     >
-                      <StatusIcon className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-medium">{status.label}</span>
+                      <StatusBadge status={status} size="sm" className="border-0 bg-transparent p-0 h-auto" />
                     </Button>
                   );
                 })}
@@ -523,7 +521,12 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   <div className="space-y-3">
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Artisan assigné</label>
-                      <div className="text-sm font-medium text-foreground mt-1">{intervention.artisan}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-sm font-medium text-foreground">{intervention.artisan}</span>
+                        {intervention.artisan_metier && (
+                          <MetierBadge metier={intervention.artisan_metier} size="sm" />
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
@@ -541,6 +544,36 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Agence et Utilisateur assigné */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {intervention.agence && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Agence</label>
+                          <div className="mt-1">
+                            <AgenceBadge agence={intervention.agence} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {intervention.utilisateur_assigné && (
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground">Utilisateur assigné</label>
+                          <div className="mt-1">
+                            <UserBadge user={intervention.utilisateur_assigné} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Référence */}
+                    {intervention.reference && (
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Référence</label>
+                        <div className="text-sm font-mono text-foreground mt-1">
+                          {intervention.reference}
+                        </div>
+                      </div>
+                    )}
                     {intervention.notes && (
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Notes</label>

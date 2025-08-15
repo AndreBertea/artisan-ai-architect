@@ -9,10 +9,6 @@ import {
   Filter, 
   Download, 
   MoreHorizontal,
-  Clock,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
   ExternalLink,
   Plus
 } from 'lucide-react';
@@ -22,15 +18,21 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { InterventionCard } from '@/components/ui/InterventionCard';
 import { InterventionDetailCard } from '@/components/ui/InterventionDetailCard';
+import { type InterventionStatus, type ArtisanMetier } from '@/components/ui/BadgeComponents';
 
 interface Intervention {
   id: string;
   client: string;
   artisan: string;
-  statut: 'demande' | 'en_cours' | 'termine' | 'bloque';
+  statut: InterventionStatus;
   cree: string;
   echeance: string;
   description: string;
+  // Nouvelles propriétés
+  artisan_metier?: ArtisanMetier;
+  agence?: string;
+  utilisateur_assigné?: string;
+  reference?: string;
 }
 
 export const Interventions: React.FC = () => {
@@ -105,24 +107,7 @@ export const Interventions: React.FC = () => {
     };
   }, []);
 
-  const getStatusBadge = (statut: string) => {
-    const statusConfig = {
-      demande: { variant: 'secondary', icon: Clock, color: 'text-blue-600' },
-      en_cours: { variant: 'secondary', icon: AlertCircle, color: 'text-orange-600' },
-      termine: { variant: 'secondary', icon: CheckCircle, color: 'text-green-600' },
-      bloque: { variant: 'destructive', icon: XCircle, color: 'text-red-600' }
-    };
 
-    const config = statusConfig[statut as keyof typeof statusConfig];
-    const Icon = config.icon;
-
-    return (
-      <Badge variant={config.variant as any} className={config.color}>
-        <Icon className="h-3 w-3 mr-1" />
-        {statut.charAt(0).toUpperCase() + statut.slice(1).replace('_', ' ')}
-      </Badge>
-    );
-  };
 
   const filteredInterventions = interventions.filter(intervention =>
     intervention.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
