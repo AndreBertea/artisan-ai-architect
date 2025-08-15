@@ -173,6 +173,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       color: #64748b;
       fill: currentColor;
       background: transparent;
+      border: 1px solid transparent;
     }
 
     .text {
@@ -200,8 +201,9 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     }
 
     .iso-pro:hover .svg {
-      background: #f1f5f9;
-      color: #475569;
+      background: #f8fafc;
+      color: #374151;
+      border-color: #d1d5db;
     }
 
     .iso-pro:hover .text {
