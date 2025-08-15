@@ -23,10 +23,7 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Wrench,
-  MessageSquare,
-  PhoneCall,
-  FileText as DocumentIcon
+  Wrench
 } from 'lucide-react';
 import { StatusBadge, MetierBadge, AgenceBadge } from '@/components/ui/BadgeComponents';
 import { InterventionAPI, calculateMarge, formatCurrency } from '@/services/interventionApi';
@@ -38,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import UserIconButton from './UserIconButton';
 
 interface Intervention {
   id: string;
@@ -105,10 +101,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMarginEdit, setShowMarginEdit] = useState(false);
   const [showStatusEdit, setShowStatusEdit] = useState(false);
-  const [showCardStatusMenu, setShowCardStatusMenu] = useState(false);
   const [activeColorPicker, setActiveColorPicker] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const statusButtonRef = useRef<HTMLButtonElement>(null);
   const [statusColors, setStatusColors] = useState<Record<string, string>>({
     demande: '#3B82F6',
     devis_envoye: '#8B5CF6',
@@ -122,7 +115,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     sav: '#6B7280'
   });
   const [pinnedStatuses, setPinnedStatuses] = useState<string[]>(['demande', 'devis_envoye', 'accepte', 'en_cours']);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+
   const navigate = useNavigate();
 
   // Liste des utilisateurs (mock - à remplacer par les données des paramètres)
@@ -142,79 +135,8 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     { id: 10, nom: 'Montanari', prenom: 'Dimitri', username: 'Dimitri', color: '#22d3ee' },
   ];
 
-  // Styles CSS pour les icônes d'action
-  const actionIconsStyles = `
-    .card {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .card ul {
-      display: flex;
-      list-style: none;
-      gap: 0.5rem;
-      align-items: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    .card ul li {
-      cursor: pointer;
-      position: relative;
-    }
-
-    .svg {
-      transition: all 0.2s;
-      padding: 0.5rem;
-      height: 32px;
-      width: 32px;
-      border-radius: 6px;
-      color: #64748b;
-      fill: currentColor;
-      background: transparent;
-      border: 1px solid transparent;
-    }
-
-    .text {
-      opacity: 0;
-      border-radius: 6px;
-      padding: 8px 10px;
-      transition: all 0.2s;
-      color: #1e293b;
-      background-color: #ffffff;
-      position: absolute;
-      z-index: 9999;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      font-size: 11px;
-      font-weight: 500;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      pointer-events: none;
-      border: 1px solid #e2e8f0;
-    }
-
-    .iso-pro {
-      transition: 0.2s;
-    }
-
-    .iso-pro:hover .svg {
-      background: #f8fafc;
-      color: #374151;
-      border-color: #d1d5db;
-    }
-
-    .iso-pro:hover .text {
-      opacity: 1;
-      transform: translateX(-50%) translateY(4px);
-    }
-
-    .iso-pro:hover {
-      z-index: 10;
-    }
-
+  // Styles CSS pour l'icône utilisateur dans la colonne 1
+  const userIconStyles = `
     /* Styles pour l'icône utilisateur dans la colonne 1 */
     .user-menu-container .user-button {
       transition: all 0.2s ease;
@@ -286,39 +208,18 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     setActiveColorPicker(statusKey);
   };
 
-  // Fonction pour calculer la position du menu de statut
-  const calculateMenuPosition = () => {
-    if (statusButtonRef.current) {
-      const rect = statusButtonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 8, // 8px de marge
-        left: rect.left + window.scrollX
-      });
-    }
-  };
 
-  // Fonction pour ouvrir le menu de statut
-  const handleOpenStatusMenu = () => {
-    calculateMenuPosition();
-    setShowCardStatusMenu(true);
-  };
 
   // Fonction pour fermer le color picker
   const handleCloseColorPicker = () => {
     setActiveColorPicker(null);
   };
 
-  // Gestionnaire de clic global pour fermer le color picker et le menu de statut
+  // Gestionnaire de clic global pour fermer le color picker
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (activeColorPicker && !(event.target as Element).closest('.color-picker-container')) {
         handleCloseColorPicker();
-      }
-      if (showCardStatusMenu && !(event.target as Element).closest('.status-menu-container') && !(event.target as Element).closest('.status-menu-portal')) {
-        setShowCardStatusMenu(false);
-      }
-      if (showUserMenu && !(event.target as Element).closest('.user-menu-container') && !(event.target as Element).closest('.user-menu-portal')) {
-        setShowUserMenu(false);
       }
     };
 
@@ -326,7 +227,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeColorPicker, showCardStatusMenu, showUserMenu]);
+  }, [activeColorPicker]);
 
   // Fonction pour épingler/désépingler un statut
   const handleTogglePin = (statusKey: string) => {
@@ -355,7 +256,6 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       onUserChange?.(intervention, newUsername);
       
       console.log('Utilisateur changé vers:', newUsername);
-      setShowUserMenu(false);
     } catch (error) {
       console.error('Erreur lors du changement d\'utilisateur:', error);
     }
@@ -471,7 +371,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
 
   return (
     <div className={className}>
-      <style>{actionIconsStyles}</style>
+      <style>{userIconStyles}</style>
     <Card 
       className={`
         group relative overflow-hidden transition-all duration-300 ease-out
@@ -513,25 +413,57 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                 {(() => {
                   const currentUser = users.find(u => u.username === intervention.utilisateur_assigné);
                   return (
-                    <UserIconButton
-                      size={24}
-                      bgColor={currentUser ? currentUser.color : "transparent"}
-                      hoverColor={currentUser ? currentUser.color : "transparent"}
-                      iconColor="#ffffff"
-                      title={`Opérateur: ${intervention.utilisateur_assigné || 'Non assigné'}`}
-                      userInitials={currentUser ? currentUser.username.substring(0, 2).toUpperCase() : "NA"}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Calculer la position du menu
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setMenuPosition({
-                          top: rect.bottom + window.scrollY,
-                          left: rect.left + window.scrollX
-                        });
-                        setShowUserMenu(!showUserMenu);
-                      }}
-                      className="user-button"
-                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all duration-200 hover:scale-110 cursor-pointer"
+                          style={{ backgroundColor: currentUser ? currentUser.color : "#6B7280" }}
+                          title={`Opérateur: ${intervention.utilisateur_assigné || 'Non assigné'}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {currentUser ? currentUser.username.substring(0, 2).toUpperCase() : "NA"}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-64">
+                        <div className="text-xs font-medium text-gray-600 mb-3 px-2">Changer l'opérateur</div>
+                        <div className="max-h-60 overflow-y-auto">
+                          {users.map((user) => {
+                            const isActive = intervention.utilisateur_assigné === user.username;
+                            return (
+                              <DropdownMenuItem
+                                key={user.id}
+                                className={`
+                                  flex items-center gap-3 px-3 py-2 text-sm transition-all duration-200
+                                  ${isActive ? 'bg-orange-100 border border-orange-300' : 'hover:bg-gray-50'}
+                                `}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUserChange(user.username);
+                                }}
+                              >
+                                <div 
+                                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                                  style={{ backgroundColor: user.color }}
+                                >
+                                  {user.username.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium">{user.prenom} {user.nom}</div>
+                                  <div className="text-xs text-gray-500">{user.username}</div>
+                                </div>
+                                {isActive && (
+                                  <div className="text-orange-600">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   );
                 })()}
               </div>
@@ -560,80 +492,64 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
           <div className="space-y-2">
             {/* Badge de statut cliquable */}
             <div className="relative status-menu-container">
-              <button
-                ref={statusButtonRef}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-200 hover:shadow-md cursor-pointer"
-                style={{
-                  backgroundColor: `${getStatusColor(intervention.statut)}10`,
-                  borderColor: `${getStatusColor(intervention.statut)}30`,
-                  color: getStatusColor(intervention.statut)
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (showCardStatusMenu) {
-                    setShowCardStatusMenu(false);
-                  } else {
-                    handleOpenStatusMenu();
-                  }
-                }}
-              >
-                {(() => {
-                  const status = allStatuses.find(s => s.key === intervention.statut);
-                  const StatusIcon = status?.icon || Clock;
-                  return <StatusIcon className="h-4 w-4" />;
-                })()}
-                {(() => {
-                  const status = allStatuses.find(s => s.key === intervention.statut);
-                  return status?.label || intervention.statut;
-                })()}
-              </button>
-              
-                                            {/* Menu de sélection des statuts - Portail */}
-               {showCardStatusMenu && createPortal(
-                 <div 
-                   className="fixed bg-white rounded-lg shadow-lg border p-3 z-[9999] min-w-[200px] status-menu-portal"
-                   style={{
-                     top: menuPosition.top,
-                     left: menuPosition.left
-                   }}
-                 >
-                   <div className="text-xs font-medium text-gray-600 mb-3">Changer le statut</div>
-                   <div className="grid grid-cols-1 gap-2">
-                     {allStatuses.map((status) => {
-                       const StatusIcon = status.icon;
-                       const isActive = intervention.statut === status.key;
-                       const statusColor = getStatusColor(status.key);
-                       return (
-                         <button
-                           key={status.key}
-                           className={`
-                             flex items-center gap-2 px-3 py-2 text-sm rounded transition-all duration-200 text-left
-                             ${isActive ? 'shadow-md' : 'hover:bg-gray-50'}
-                           `}
-                           style={{
-                             ...(isActive ? {
-                               backgroundColor: statusColor,
-                               color: 'white'
-                             } : {
-                               backgroundColor: `${statusColor}10`,
-                               color: statusColor
-                             })
-                           }}
-                           onClick={(e) => {
-                             e.stopPropagation();
-                             onStatusChange?.(intervention, status.key);
-                             setShowCardStatusMenu(false);
-                           }}
-                         >
-                           <StatusIcon className="h-4 w-4" />
-                           <span className="font-medium">{status.label}</span>
-                         </button>
-                       );
-                     })}
-                   </div>
-                 </div>,
-                 document.body
-               )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-full border transition-all duration-200 hover:shadow-md cursor-pointer"
+                    style={{
+                      backgroundColor: `${getStatusColor(intervention.statut)}10`,
+                      borderColor: `${getStatusColor(intervention.statut)}30`,
+                      color: getStatusColor(intervention.statut)
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {(() => {
+                      const status = allStatuses.find(s => s.key === intervention.statut);
+                      const StatusIcon = status?.icon || Clock;
+                      return <StatusIcon className="h-4 w-4" />;
+                    })()}
+                    {(() => {
+                      const status = allStatuses.find(s => s.key === intervention.statut);
+                      return status?.label || intervention.statut;
+                    })()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <div className="text-xs font-medium text-gray-600 mb-3 px-2">Changer le statut</div>
+                  <div className="grid grid-cols-1 gap-1">
+                    {allStatuses.map((status) => {
+                      const StatusIcon = status.icon;
+                      const isActive = intervention.statut === status.key;
+                      const statusColor = getStatusColor(status.key);
+                      return (
+                        <DropdownMenuItem
+                          key={status.key}
+                          className={`
+                            flex items-center gap-2 px-3 py-2 text-sm transition-all duration-200
+                            ${isActive ? 'shadow-md' : 'hover:bg-gray-50'}
+                          `}
+                          style={{
+                            ...(isActive ? {
+                              backgroundColor: statusColor,
+                              color: 'white'
+                            } : {
+                              backgroundColor: `${statusColor}10`,
+                              color: statusColor
+                            })
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusChange?.(intervention, status.key);
+                          }}
+                        >
+                          <StatusIcon className="h-4 w-4" />
+                          <span className="font-medium">{status.label}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="flex items-center gap-2">
@@ -651,106 +567,92 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
 
           {/* Colonne 3: Actions & Infos */}
           <div className="space-y-2 flex flex-col items-end">
-            {/* Actions - Desktop */}
-            <div className="hidden lg:flex items-center gap-2">
+            {/* Actions Menu */}
+            <div className={`
+              flex items-center gap-2 transition-all duration-300
+              ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}
+            `}>
               
-              {/* Nouveau style pour les icônes d'action */}
-              <div className="card">
-                <ul>
-                  {/* Icône Message avec sous-menu */}
-                  <li className="iso-pro">
-                    <a href="#" onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onSendEmail?.(intervention);
-                    }}>
-                      <MessageSquare className="svg" />
-                    </a>
-                    <div className="text">
-                      <div className="mb-1">Message artisan</div>
-                      <div>Message client</div>
-                    </div>
-                  </li>
-                  
-                  {/* Icône Appel avec sous-menu */}
-                  <li className="iso-pro">
-                    <a href="#" onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onCall?.(intervention);
-                    }}>
-                      <PhoneCall className="svg" />
-                    </a>
-                    <div className="text">
-                      <div className="mb-1">Appeler artisan</div>
-                      <div>Appeler client</div>
-                    </div>
-                  </li>
-                  
-                  {/* Icône Document avec sous-menu */}
-                  <li className="iso-pro">
-                    <a href="#" onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onAddDocument?.(intervention);
-                    }}>
-                      <DocumentIcon className="svg" />
-                    </a>
-                    <div className="text">
-                      <div className="mb-1">Ajouter document</div>
-                      <div>Voir documents</div>
-                    </div>
-                  </li>
-                </ul>
+              {/* Desktop: Individual Buttons */}
+              <div className="hidden md:flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onSendEmail?.(intervention)}
+                  title="Envoyer un email"
+                  className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                >
+                  <Mail className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onCall?.(intervention)}
+                  title="Appeler"
+                  className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
+                >
+                  <Phone className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onAddDocument?.(intervention)}
+                  title="Ajouter un document"
+                  className="h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600"
+                >
+                  <FilePlus className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
 
-            {/* Actions - Mobile */}
-            <div className="lg:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => onEdit?.(intervention)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Éditer
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onSendEmail?.(intervention)}>
-                    <Mail className="h-4 w-4 mr-2" />
-                    Email
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onCall?.(intervention)}>
-                    <Phone className="h-4 w-4 mr-2" />
-                    Appeler
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onAddDocument?.(intervention)}>
-                    <FilePlus className="h-4 w-4 mr-2" />
-                    Document
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Mobile: Dropdown Menu */}
+              <div className="block md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => onEdit?.(intervention)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Éditer
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onSendEmail?.(intervention)}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Email
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onCall?.(intervention)}>
+                      <Phone className="h-4 w-4 mr-2" />
+                      Appeler
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onAddDocument?.(intervention)}>
+                      <FilePlus className="h-4 w-4 mr-2" />
+                      Document
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
             {/* Informations */}
             <div className="space-y-2 text-right">
+              <div className="space-y-1 text-right">
+                <div className="flex items-center gap-2 text-lg font-bold text-green-600 justify-end">
+                  <Euro className="h-5 w-5" />
+                  <span>{formatCurrency(getMarge())}</span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Marge: {intervention.coutInterventions > 0 ? Math.round((getMarge() / intervention.coutInterventions) * 100) : 0}%
+                </div>
+              </div>
+              
               {intervention.reference && (
                 <div className="text-sm text-muted-foreground">
                   Réf: {intervention.reference}
                 </div>
               )}
-              
-              <div className="space-y-0.5 text-right">
-                <div className="flex items-center gap-1 text-sm font-medium text-green-600 justify-end">
-                  <Euro className="h-4 w-4" />
-                  <span>{formatCurrency(getMarge())}</span>
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Marge: {intervention.coutInterventions > 0 ? Math.round((getMarge() / intervention.coutInterventions) * 100) : 0}%
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -770,55 +672,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       `} />
     </Card>
 
-    {/* Menu de sélection d'utilisateur - Portail */}
-    {showUserMenu && createPortal(
-      <div 
-        className="fixed bg-white rounded-lg shadow-lg border p-3 z-[9999] min-w-[250px] user-menu-portal"
-        style={{
-          top: menuPosition.top + 8, // Position juste en dessous de l'icône
-          left: menuPosition.left - 125 // Centré par rapport à l'icône
-        }}
-      >
-        <div className="text-xs font-medium text-gray-600 mb-3">Changer l'opérateur</div>
-        <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
-          {users.map((user) => {
-            const isActive = intervention.utilisateur_assigné === user.username;
-            return (
-              <button
-                key={user.id}
-                className={`
-                  flex items-center gap-3 px-3 py-2 text-sm rounded transition-all duration-200 text-left
-                  ${isActive ? 'bg-orange-100 border border-orange-300' : 'hover:bg-gray-50'}
-                `}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleUserChange(user.username);
-                }}
-              >
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
-                  style={{ backgroundColor: user.color }}
-                >
-                  {user.username.substring(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium">{user.prenom} {user.nom}</div>
-                  <div className="text-xs text-gray-500">{user.username}</div>
-                </div>
-                {isActive && (
-                  <div className="text-orange-600">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>,
-      document.body
-    )}
+
 
     {/* Section dépliable avec informations et édition intégrée */}
     <div className={`
