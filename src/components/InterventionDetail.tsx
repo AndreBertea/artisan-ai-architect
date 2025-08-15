@@ -20,17 +20,7 @@ import {
 } from 'lucide-react';
 import { InterventionsAPI } from '@/services/api';
 
-interface Intervention {
-  id: string;
-  client: string;
-  artisan: string;
-  statut: 'demande' | 'en_cours' | 'termine' | 'bloque';
-  cree: string;
-  echeance: string;
-  description: string;
-  montant?: number;
-  adresse?: string;
-}
+import { Intervention } from '@/services/interventionApi';
 
 export const InterventionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

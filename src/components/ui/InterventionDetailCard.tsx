@@ -42,20 +42,7 @@ import { useTheme } from 'next-themes';
 import { EditableCell } from '@/components/ui/EditableCell';
 import { calculateMarge, formatCurrency } from '@/services/interventionApi';
 
-interface Intervention {
-  id: string;
-  client: string;
-  artisan: string;
-  statut: 'demande' | 'en_cours' | 'termine' | 'bloque';
-  cree: string;
-  echeance: string;
-  description: string;
-  montant?: number;
-  adresse?: string;
-  coutSST?: number;
-  coutMateriaux?: number;
-  coutInterventions?: number;
-}
+import { Intervention } from '@/services/interventionApi';
 
 interface InterventionDetailCardProps {
   intervention: Intervention;

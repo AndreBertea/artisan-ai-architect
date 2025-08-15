@@ -20,25 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { InterventionCard } from '@/components/ui/InterventionCard';
 import { InterventionDetailCard } from '@/components/ui/InterventionDetailCard';
 
-interface Intervention {
-  id: string;
-  client: string;
-  artisan: string;
-  artisan_metier?: string;
-  agence?: string;
-  utilisateur_assigné?: string;
-  reference?: string;
-  statut: 'demande' | 'en_cours' | 'termine' | 'bloque';
-  cree: string;
-  echeance: string;
-  description: string;
-  montant?: number;
-  adresse?: string;
-  notes?: string;
-  coutSST?: number;
-  coutMateriaux?: number;
-  coutInterventions?: number;
-}
+// Import de l'interface depuis l'API
+import { Intervention } from '@/services/interventionApi';
 
 export const Interventions: React.FC = () => {
   const [interventions, setInterventions] = useState<Intervention[]>([]);
@@ -144,7 +127,7 @@ export const Interventions: React.FC = () => {
 
   const handleStatusChange = async (intervention: Intervention, newStatus: string) => {
     try {
-      const updatedIntervention = await InterventionAPI.updateStatus(intervention.id, newStatus as any);
+      const updatedIntervention = await InterventionAPI.updateStatus(intervention.id, newStatus as Intervention['statut']);
       setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
       if (selectedIntervention?.id === intervention.id) {
         setSelectedIntervention(updatedIntervention);
