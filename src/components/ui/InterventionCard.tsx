@@ -492,15 +492,6 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
           <div className="space-y-2 flex flex-col items-end">
             {/* Actions - Desktop */}
             <div className="hidden lg:flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleNavigateToDetail}
-                className="h-8 px-3 bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Ouvrir
-              </Button>
               
               <Button
                 variant="ghost"
@@ -542,10 +533,6 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleNavigateToDetail}>
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Ouvrir
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onEdit?.(intervention)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Éditer
@@ -595,17 +582,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       </CardHeader>
 
       <CardContent className="pt-0">
-        {/* Mobile Primary Action */}
-        <div className="block lg:hidden mt-4">
-          <Button 
-            onClick={handleNavigateToDetail}
-            className="w-full h-11 font-medium"
-            size="lg"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Ouvrir l'intervention
-          </Button>
-        </div>
+        {/* Mobile actions handled by dropdown menu */}
       </CardContent>
 
       {/* Hover overlay */}
