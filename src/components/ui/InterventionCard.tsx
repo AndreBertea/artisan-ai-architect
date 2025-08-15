@@ -23,9 +23,12 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
-  Wrench
+  Wrench,
+  MessageSquare,
+  PhoneCall,
+  FileText as DocumentIcon
 } from 'lucide-react';
-import { StatusBadge, MetierBadge, AgenceBadge, UserBadge } from '@/components/ui/BadgeComponents';
+import { StatusBadge, MetierBadge, AgenceBadge } from '@/components/ui/BadgeComponents';
 import { InterventionAPI, calculateMarge, formatCurrency } from '@/services/interventionApi';
 import { EditableCell } from './EditableCell';
 import {
@@ -35,6 +38,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import FolderIconButton from './FolderIconButton';
+import RoundIconButton from './RoundIconButton';
+import InboxIconButton from './InboxIconButton';
+import UserIconButton from './UserIconButton';
 
 interface Intervention {
   id: string;
@@ -73,6 +80,7 @@ interface InterventionCardProps {
   onCoutSSTChange?: (intervention: Intervention, amount: number) => void;
   onCoutMateriauxChange?: (intervention: Intervention, amount: number) => void;
   onCoutInterventionsChange?: (intervention: Intervention, amount: number) => void;
+  onUserChange?: (intervention: Intervention, username: string) => void;
   className?: string;
 }
 
@@ -93,6 +101,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   onCoutSSTChange,
   onCoutMateriauxChange,
   onCoutInterventionsChange,
+  onUserChange,
   className = ''
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -116,7 +125,179 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     sav: '#6B7280'
   });
   const [pinnedStatuses, setPinnedStatuses] = useState<string[]>(['demande', 'devis_envoye', 'accepte', 'en_cours']);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
+
+  // Liste des utilisateurs (mock - à remplacer par les données des paramètres)
+  const users = [
+    { id: 99, nom: 'Morin', prenom: 'Grégoire', username: 'GM', color: '#222222' },
+    { id: 1, nom: 'admin', prenom: 'admin', username: 'admin', color: '#000000' },
+    { id: 20, nom: 'admin2', prenom: 'admin2', username: 'admin2', color: '#1976d2' },
+    { id: 11, nom: 'Birckel', prenom: 'Tom', username: 'Tom', color: '#eab308' },
+    { id: 9, nom: 'Boujimal', prenom: 'Badr', username: 'Badr', color: '#ef4444' },
+    { id: 22, nom: 'BERTEA', prenom: 'André', username: 'dd', color: '#6366f1' },
+    { id: 13, nom: 'Aguenana', prenom: 'Keryan', username: 'Paul', color: '#f59e42' },
+    { id: 14, nom: 'Saune', prenom: 'Louis', username: 'Louis', color: '#f472b6' },
+    { id: 16, nom: 's', prenom: 'Samuel', username: 'Samuel', color: '#f87171' },
+    { id: 17, nom: 'L', prenom: 'Lucien', username: 'Lucien', color: '#0ea5e9' },
+    { id: 3, nom: 'GAUTRET', prenom: 'ANDREA', username: 'Andrea', color: '#a21caf' },
+    { id: 18, nom: 'K', prenom: 'Killian', username: 'Killian', color: '#f43f5e' },
+    { id: 10, nom: 'Montanari', prenom: 'Dimitri', username: 'Dimitri', color: '#22d3ee' },
+  ];
+
+  // Styles CSS pour les icônes d'action
+  const actionIconsStyles = `
+    .card {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card ul {
+      display: flex;
+      list-style: none;
+      gap: 0.5rem;
+      align-items: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .card ul li {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .svg {
+      transition: all 0.3s;
+      padding: 0.5rem;
+      height: 40px;
+      width: 40px;
+      border-radius: 12px;
+      color: #64748b;
+      fill: currentColor;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .text {
+      opacity: 0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      transition: all 0.3s;
+      color: #1e293b;
+      background-color: #ffffff;
+      position: absolute;
+      z-index: 9999;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      pointer-events: none;
+      border: 1px solid #e2e8f0;
+    }
+
+    .iso-pro {
+      transition: 0.3s;
+    }
+
+    .iso-pro:hover .svg {
+      transform: translate(0, -4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      border-color: #3b82f6;
+      color: #3b82f6;
+      background: #f8fafc;
+    }
+
+    .iso-pro:hover .text {
+      opacity: 1;
+      transform: translateX(-50%) translateY(8px);
+    }
+
+    .iso-pro:hover {
+      z-index: 10;
+    }
+
+    .folder-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .folder-wrapper {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid #8B5CF6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+
+    .folder-button {
+      transition: all 0.3s ease;
+    }
+
+    .iso-pro:hover .folder-wrapper {
+      transform: translate(0, -4px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    }
+
+    .iso-pro:hover .folder-button {
+      transform: translate(0, -4px);
+    }
+
+    .phone-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phone-button {
+      transition: all 0.3s ease;
+    }
+
+    .iso-pro:hover .phone-button {
+      transform: translate(0, -4px);
+    }
+
+    .mail-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mail-button {
+      transition: all 0.3s ease;
+    }
+
+    .iso-pro:hover .mail-button {
+      transform: translate(0, -4px);
+    }
+
+    .user-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-button {
+      transition: all 0.3s ease;
+    }
+
+    .iso-pro:hover .user-button {
+      transform: translate(0, -4px);
+    }
+  `;
 
   // Configuration des statuts avec couleurs personnalisées
   const allStatuses = [
@@ -210,13 +391,16 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       if (showCardStatusMenu && !(event.target as Element).closest('.status-menu-container') && !(event.target as Element).closest('.status-menu-portal')) {
         setShowCardStatusMenu(false);
       }
+      if (showUserMenu && !(event.target as Element).closest('.user-menu-container') && !(event.target as Element).closest('.user-menu-portal')) {
+        setShowUserMenu(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeColorPicker, showCardStatusMenu]);
+  }, [activeColorPicker, showCardStatusMenu, showUserMenu]);
 
   // Fonction pour épingler/désépingler un statut
   const handleTogglePin = (statusKey: string) => {
@@ -227,6 +411,28 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
         return [...prev, statusKey];
       }
     });
+  };
+
+  // Fonction pour changer l'utilisateur assigné
+  const handleUserChange = async (newUsername: string) => {
+    try {
+      // Ici vous pouvez ajouter l'appel API pour mettre à jour l'utilisateur assigné
+      // Par exemple: await InterventionAPI.updateUser(intervention.id, newUsername);
+      
+      // Pour l'instant, on met à jour localement
+      const updatedIntervention = {
+        ...intervention,
+        utilisateur_assigné: newUsername
+      };
+      
+      // Mettre à jour l'intervention dans le parent
+      onUserChange?.(intervention, newUsername);
+      
+      console.log('Utilisateur changé vers:', newUsername);
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error('Erreur lors du changement d\'utilisateur:', error);
+    }
   };
 
   const handleNavigateToDetail = () => {
@@ -339,6 +545,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
 
   return (
     <div className={className}>
+      <style>{actionIconsStyles}</style>
     <Card 
       className={`
         group relative overflow-hidden transition-all duration-300 ease-out
@@ -493,35 +700,128 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
             {/* Actions - Desktop */}
             <div className="hidden lg:flex items-center gap-2">
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onSendEmail?.(intervention)}
-                title="Envoyer un email"
-                className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
-              >
-                <Mail className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onCall?.(intervention)}
-                title="Appeler"
-                className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
-              >
-                <Phone className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onAddDocument?.(intervention)}
-                title="Ajouter un document"
-                className="h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600"
-              >
-                <FilePlus className="h-4 w-4" />
-              </Button>
+              {/* Nouveau style pour les icônes d'action */}
+              <div className="card">
+                <ul>
+                  {/* Icône Message avec sous-menu */}
+                  <li className="iso-pro">
+                    <div className="mail-container">
+                      <InboxIconButton
+                        size={32}
+                        bgColor="transparent"
+                        hoverColor="transparent"
+                        iconColor="#3B82F6"
+                        title="Message"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSendEmail?.(intervention);
+                        }}
+                        className="mail-button"
+                      />
+                    </div>
+                    <div className="text">
+                      <div className="mb-1">Message artisan</div>
+                      <div>Message client</div>
+                    </div>
+                  </li>
+                  
+                  {/* Icône Appel avec sous-menu */}
+                  <li className="iso-pro">
+                    <div className="phone-container">
+                      <RoundIconButton
+                        size={32}
+                        bg="transparent"
+                        hoverBg="transparent"
+                        title="Appeler"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCall?.(intervention);
+                        }}
+                        className="phone-button"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="19"
+                          height="19"
+                          viewBox="0 0 32 32"
+                          fill="none"
+                          className="svg-icon"
+                          role="img"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            stroke="#30C04F"
+                            fillRule="evenodd"
+                            clipRule="evenodd"
+                            d="m24.8868 19.1288c-1.0274-.1308-2.036-.3815-3.0052-.7467-.7878-.29-1.6724-.1034-2.276.48-.797.8075-2.0493.9936-2.9664.3258-1.4484-1.055-2.7233-2.3295-3.7783-3.7776-.6681-.9168-.4819-2.1691.3255-2.9659.5728-.6019.7584-1.4748.4802-2.2577-.3987-.98875-.6792-2.02109-.8358-3.07557-.2043-1.03534-1.1138-1.7807-2.1694-1.77778h-3.18289c-.60654-.00074-1.18614.25037-1.60035.69334-.40152.44503-.59539 1.03943-.53345 1.63555.344 3.31056 1.47164 6.49166 3.28961 9.27986 1.64878 2.5904 3.84608 4.7872 6.43688 6.4356 2.7927 1.797 5.9636 2.9227 9.2644 3.289h.1778c.5409.0036 1.0626-.2 1.4581-.569.444-.406.6957-.9806.6935-1.5822v-3.1821c.0429-1.0763-.7171-2.0185-1.7782-2.2046z"
+                          />
+                        </svg>
+                      </RoundIconButton>
+                    </div>
+                    <div className="text">
+                      <div className="mb-1">Appeler artisan</div>
+                      <div>Appeler client</div>
+                    </div>
+                  </li>
+                  
+                  {/* Icône Document avec sous-menu */}
+                  <li className="iso-pro">
+                    <div className="folder-container">
+                      <div className="folder-wrapper">
+                        <FolderIconButton
+                          size={20}
+                          title="Documents"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddDocument?.(intervention);
+                          }}
+                          className="folder-button"
+                        />
+                      </div>
+                    </div>
+                    <div className="text">
+                      <div className="mb-1">Ajouter document</div>
+                      <div>Voir documents</div>
+                    </div>
+                  </li>
+
+                  {/* Icône Utilisateur avec sous-menu */}
+                  <li className="iso-pro user-menu-container">
+                    <div className="user-container">
+                      {(() => {
+                        const currentUser = users.find(u => u.username === intervention.utilisateur_assigné);
+                        return (
+                          <UserIconButton
+                            size={32}
+                            bgColor={currentUser ? currentUser.color : "transparent"}
+                            hoverColor={currentUser ? currentUser.color : "transparent"}
+                            iconColor="#ffffff"
+                            title={`Opérateur: ${intervention.utilisateur_assigné || 'Non assigné'}`}
+                            userInitials={currentUser ? currentUser.username.substring(0, 2).toUpperCase() : "NA"}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Calculer la position du menu
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMenuPosition({
+                                top: rect.bottom + window.scrollY,
+                                left: rect.left + window.scrollX
+                              });
+                              setShowUserMenu(!showUserMenu);
+                            }}
+                            className="user-button"
+                          />
+                        );
+                      })()}
+                    </div>
+                    <div className="text">
+                      <div className="mb-1">Changer opérateur</div>
+                      <div>Assigner utilisateur</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Actions - Mobile */}
@@ -555,10 +855,6 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
 
             {/* Informations */}
             <div className="space-y-2 text-right">
-              {intervention.utilisateur_assigné && (
-                <UserBadge user={intervention.utilisateur_assigné} size="sm" />
-              )}
-              
               {intervention.reference && (
                 <div className="text-sm text-muted-foreground">
                   Réf: {intervention.reference}
@@ -592,6 +888,56 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
         ${isHovered ? 'opacity-100' : 'opacity-0'}
       `} />
     </Card>
+
+    {/* Menu de sélection d'utilisateur - Portail */}
+    {showUserMenu && createPortal(
+      <div 
+        className="fixed bg-white rounded-lg shadow-lg border p-3 z-[9999] min-w-[250px] user-menu-portal"
+        style={{
+          top: menuPosition.top + 8, // Position juste en dessous de l'icône
+          left: menuPosition.left - 125 // Centré par rapport à l'icône
+        }}
+      >
+        <div className="text-xs font-medium text-gray-600 mb-3">Changer l'opérateur</div>
+        <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
+          {users.map((user) => {
+            const isActive = intervention.utilisateur_assigné === user.username;
+            return (
+              <button
+                key={user.id}
+                className={`
+                  flex items-center gap-3 px-3 py-2 text-sm rounded transition-all duration-200 text-left
+                  ${isActive ? 'bg-orange-100 border border-orange-300' : 'hover:bg-gray-50'}
+                `}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUserChange(user.username);
+                }}
+              >
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ backgroundColor: user.color }}
+                >
+                  {user.username.substring(0, 2).toUpperCase()}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">{user.prenom} {user.nom}</div>
+                  <div className="text-xs text-gray-500">{user.username}</div>
+                </div>
+                {isActive && (
+                  <div className="text-orange-600">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>,
+      document.body
+    )}
 
     {/* Section dépliable avec informations et édition intégrée */}
     <div className={`

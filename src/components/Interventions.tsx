@@ -262,6 +262,26 @@ export const Interventions: React.FC = () => {
     }
   };
 
+  const handleUserChange = async (intervention: Intervention, username: string) => {
+    try {
+      // Ici vous pouvez ajouter l'appel API pour mettre à jour l'utilisateur assigné
+      // const updatedIntervention = await InterventionAPI.updateUser(intervention.id, username);
+      
+      // Pour l'instant, on met à jour localement
+      const updatedIntervention = {
+        ...intervention,
+        utilisateur_assigné: username
+      };
+      
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour utilisateur:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -346,6 +366,7 @@ export const Interventions: React.FC = () => {
                   onCoutSSTChange={handleCoutSSTChange}
                   onCoutMateriauxChange={handleCoutMateriauxChange}
                   onCoutInterventionsChange={handleCoutInterventionsChange}
+                  onUserChange={handleUserChange}
                 />
               ))}
             </div>
