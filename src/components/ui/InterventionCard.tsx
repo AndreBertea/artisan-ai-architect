@@ -38,9 +38,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import FolderIconButton from './FolderIconButton';
-import RoundIconButton from './RoundIconButton';
-import InboxIconButton from './InboxIconButton';
 import UserIconButton from './UserIconButton';
 
 interface Intervention {
@@ -168,23 +165,21 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
     }
 
     .svg {
-      transition: all 0.3s;
+      transition: all 0.2s;
       padding: 0.5rem;
-      height: 40px;
-      width: 40px;
-      border-radius: 12px;
+      height: 32px;
+      width: 32px;
+      border-radius: 6px;
       color: #64748b;
       fill: currentColor;
-      border: 2px solid #e2e8f0;
-      background: #ffffff;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      background: transparent;
     }
 
     .text {
       opacity: 0;
-      border-radius: 8px;
-      padding: 10px 12px;
-      transition: all 0.3s;
+      border-radius: 6px;
+      padding: 8px 10px;
+      transition: all 0.2s;
       color: #1e293b;
       background-color: #ffffff;
       position: absolute;
@@ -193,109 +188,38 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       left: 50%;
       transform: translateX(-50%);
       white-space: nowrap;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       pointer-events: none;
       border: 1px solid #e2e8f0;
     }
 
     .iso-pro {
-      transition: 0.3s;
+      transition: 0.2s;
     }
 
     .iso-pro:hover .svg {
-      transform: translate(0, -4px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      border-color: #3b82f6;
-      color: #3b82f6;
-      background: #f8fafc;
+      background: #f1f5f9;
+      color: #475569;
     }
 
     .iso-pro:hover .text {
       opacity: 1;
-      transform: translateX(-50%) translateY(8px);
+      transform: translateX(-50%) translateY(4px);
     }
 
     .iso-pro:hover {
       z-index: 10;
     }
 
-    .folder-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    /* Styles pour l'icône utilisateur dans la colonne 1 */
+    .user-menu-container .user-button {
+      transition: all 0.2s ease;
     }
 
-    .folder-wrapper {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid #8B5CF6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      transition: all 0.3s ease;
-    }
-
-    .folder-button {
-      transition: all 0.3s ease;
-    }
-
-    .iso-pro:hover .folder-wrapper {
-      transform: translate(0, -4px);
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-    }
-
-    .iso-pro:hover .folder-button {
-      transform: translate(0, -4px);
-    }
-
-    .phone-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .phone-button {
-      transition: all 0.3s ease;
-    }
-
-    .iso-pro:hover .phone-button {
-      transform: translate(0, -4px);
-    }
-
-    .mail-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .mail-button {
-      transition: all 0.3s ease;
-    }
-
-    .iso-pro:hover .mail-button {
-      transform: translate(0, -4px);
-    }
-
-    .user-container {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .user-button {
-      transition: all 0.3s ease;
-    }
-
-    .iso-pro:hover .user-button {
-      transform: translate(0, -4px);
+    .user-menu-container:hover .user-button {
+      transform: translate(0, -1px);
     }
   `;
 
@@ -581,6 +505,34 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
               {intervention.agence && (
                 <AgenceBadge agence={intervention.agence} size="sm" />
               )}
+
+              {/* Icône Utilisateur */}
+              <div className="user-menu-container">
+                {(() => {
+                  const currentUser = users.find(u => u.username === intervention.utilisateur_assigné);
+                  return (
+                    <UserIconButton
+                      size={24}
+                      bgColor={currentUser ? currentUser.color : "transparent"}
+                      hoverColor={currentUser ? currentUser.color : "transparent"}
+                      iconColor="#ffffff"
+                      title={`Opérateur: ${intervention.utilisateur_assigné || 'Non assigné'}`}
+                      userInitials={currentUser ? currentUser.username.substring(0, 2).toUpperCase() : "NA"}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Calculer la position du menu
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setMenuPosition({
+                          top: rect.bottom + window.scrollY,
+                          left: rect.left + window.scrollX
+                        });
+                        setShowUserMenu(!showUserMenu);
+                      }}
+                      className="user-button"
+                    />
+                  );
+                })()}
+              </div>
             </div>
             
             <p className="text-base text-muted-foreground line-clamp-1 leading-snug" title={intervention.description}>
@@ -705,20 +657,13 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                 <ul>
                   {/* Icône Message avec sous-menu */}
                   <li className="iso-pro">
-                    <div className="mail-container">
-                      <InboxIconButton
-                        size={32}
-                        bgColor="transparent"
-                        hoverColor="transparent"
-                        iconColor="#3B82F6"
-                        title="Message"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSendEmail?.(intervention);
-                        }}
-                        className="mail-button"
-                      />
-                    </div>
+                    <a href="#" onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSendEmail?.(intervention);
+                    }}>
+                      <MessageSquare className="svg" />
+                    </a>
                     <div className="text">
                       <div className="mb-1">Message artisan</div>
                       <div>Message client</div>
@@ -727,39 +672,13 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   
                   {/* Icône Appel avec sous-menu */}
                   <li className="iso-pro">
-                    <div className="phone-container">
-                      <RoundIconButton
-                        size={32}
-                        bg="transparent"
-                        hoverBg="transparent"
-                        title="Appeler"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onCall?.(intervention);
-                        }}
-                        className="phone-button"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="19"
-                          height="19"
-                          viewBox="0 0 32 32"
-                          fill="none"
-                          className="svg-icon"
-                          role="img"
-                          aria-hidden="true"
-                        >
-                          <path
-                            strokeWidth={2}
-                            strokeLinecap="round"
-                            stroke="#30C04F"
-                            fillRule="evenodd"
-                            clipRule="evenodd"
-                            d="m24.8868 19.1288c-1.0274-.1308-2.036-.3815-3.0052-.7467-.7878-.29-1.6724-.1034-2.276.48-.797.8075-2.0493.9936-2.9664.3258-1.4484-1.055-2.7233-2.3295-3.7783-3.7776-.6681-.9168-.4819-2.1691.3255-2.9659.5728-.6019.7584-1.4748.4802-2.2577-.3987-.98875-.6792-2.02109-.8358-3.07557-.2043-1.03534-1.1138-1.7807-2.1694-1.77778h-3.18289c-.60654-.00074-1.18614.25037-1.60035.69334-.40152.44503-.59539 1.03943-.53345 1.63555.344 3.31056 1.47164 6.49166 3.28961 9.27986 1.64878 2.5904 3.84608 4.7872 6.43688 6.4356 2.7927 1.797 5.9636 2.9227 9.2644 3.289h.1778c.5409.0036 1.0626-.2 1.4581-.569.444-.406.6957-.9806.6935-1.5822v-3.1821c.0429-1.0763-.7171-2.0185-1.7782-2.2046z"
-                          />
-                        </svg>
-                      </RoundIconButton>
-                    </div>
+                    <a href="#" onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onCall?.(intervention);
+                    }}>
+                      <PhoneCall className="svg" />
+                    </a>
                     <div className="text">
                       <div className="mb-1">Appeler artisan</div>
                       <div>Appeler client</div>
@@ -768,56 +687,16 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   
                   {/* Icône Document avec sous-menu */}
                   <li className="iso-pro">
-                    <div className="folder-container">
-                      <div className="folder-wrapper">
-                        <FolderIconButton
-                          size={20}
-                          title="Documents"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddDocument?.(intervention);
-                          }}
-                          className="folder-button"
-                        />
-                      </div>
-                    </div>
+                    <a href="#" onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onAddDocument?.(intervention);
+                    }}>
+                      <DocumentIcon className="svg" />
+                    </a>
                     <div className="text">
                       <div className="mb-1">Ajouter document</div>
                       <div>Voir documents</div>
-                    </div>
-                  </li>
-
-                  {/* Icône Utilisateur avec sous-menu */}
-                  <li className="iso-pro user-menu-container">
-                    <div className="user-container">
-                      {(() => {
-                        const currentUser = users.find(u => u.username === intervention.utilisateur_assigné);
-                        return (
-                          <UserIconButton
-                            size={32}
-                            bgColor={currentUser ? currentUser.color : "transparent"}
-                            hoverColor={currentUser ? currentUser.color : "transparent"}
-                            iconColor="#ffffff"
-                            title={`Opérateur: ${intervention.utilisateur_assigné || 'Non assigné'}`}
-                            userInitials={currentUser ? currentUser.username.substring(0, 2).toUpperCase() : "NA"}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Calculer la position du menu
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setMenuPosition({
-                                top: rect.bottom + window.scrollY,
-                                left: rect.left + window.scrollX
-                              });
-                              setShowUserMenu(!showUserMenu);
-                            }}
-                            className="user-button"
-                          />
-                        );
-                      })()}
-                    </div>
-                    <div className="text">
-                      <div className="mb-1">Changer opérateur</div>
-                      <div>Assigner utilisateur</div>
                     </div>
                   </li>
                 </ul>
