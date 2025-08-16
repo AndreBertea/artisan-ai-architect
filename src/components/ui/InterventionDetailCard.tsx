@@ -43,6 +43,7 @@ import { EditableCell } from '@/components/ui/EditableCell';
 import { calculateMarge, formatCurrency } from '@/services/interventionApi';
 
 import { Intervention } from '@/services/interventionApi';
+import { ARTISAN_STATUS } from '@/types/artisan';
 
 interface InterventionDetailCardProps {
   intervention: Intervention;
@@ -56,6 +57,7 @@ interface InterventionDetailCardProps {
   onDateChange?: (intervention: Intervention, field: string, date: string) => void;
   onAddressChange?: (intervention: Intervention, address: string) => void;
   onArtisanChange?: (intervention: Intervention, artisan: string) => void;
+  onArtisanStatusChange?: (intervention: Intervention, newStatus: ARTISAN_STATUS) => void;
   onCoutSSTChange?: (intervention: Intervention, amount: number) => void;
   onCoutMateriauxChange?: (intervention: Intervention, amount: number) => void;
   onCoutInterventionsChange?: (intervention: Intervention, amount: number) => void;
@@ -74,6 +76,7 @@ export const InterventionDetailCard: React.FC<InterventionDetailCardProps> = ({
   onDateChange,
   onAddressChange,
   onArtisanChange,
+  onArtisanStatusChange,
   onCoutSSTChange,
   onCoutMateriauxChange,
   onCoutInterventionsChange,

@@ -26,7 +26,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Artisans', href: '/artisans', icon: Users },
   ];
 
-  const isActive = (href: string) => location.pathname === href;
+  const isActive = (href: string) => {
+    if (href === '/interventions') {
+      // Pour les interventions, détecter tous les chemins qui commencent par /interventions
+      return location.pathname.startsWith('/interventions');
+    }
+    return location.pathname === href;
+  };
 
   const getActiveStyle = (href: string) => {
     if (isActive(href)) {

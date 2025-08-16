@@ -19,6 +19,11 @@ import {
   Settings
 } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/BadgeComponents';
+import { ArtisanStatusFilter } from '@/components/ui/ArtisanStatusFilter';
+import { ArtisanDossierStatusFilter } from '@/components/ui/ArtisanDossierStatusFilter';
+import { InterventionSortFilter, SortConfig } from '@/components/ui/InterventionSortFilter';
+import { DateRangeFilter, DateRange } from '@/components/ui/DateRangeFilter';
+import { UserFilter } from '@/components/ui/UserFilter';
 import { InterventionAPI } from '@/services/interventionApi';
 import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +31,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { InterventionCard } from '@/components/ui/InterventionCard';
 import { InterventionDetailCard } from '@/components/ui/InterventionDetailCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ARTISAN_STATUS, ARTISAN_DOSSIER_STATUS } from '@/types/artisan';
 
 // Import de l'interface depuis l'API
 import { Intervention } from '@/services/interventionApi';
@@ -40,9 +46,21 @@ export const Interventions: React.FC = () => {
   // États pour les filtres
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
+  const [selectedArtisanStatuses, setSelectedArtisanStatuses] = useState<ARTISAN_STATUS[]>([]);
+  const [selectedDossierStatuses, setSelectedDossierStatuses] = useState<ARTISAN_DOSSIER_STATUS[]>([]);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [pinnedStatuses, setPinnedStatuses] = useState<string[]>([]);
   const [scrollDirection, setScrollDirection] = useState<'left' | 'right' | null>(null);
+  
+  // États pour les filtres épinglables
+  const [pinnedFilters, setPinnedFilters] = useState<{
+    artisanStatus: boolean;
+    dossierStatus: boolean;
+  }>({
+    artisanStatus: false,
+    dossierStatus: false
+  });
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
   
   // Nouveaux états pour la navigation au clavier
   const [keyboardSelectedIndex, setKeyboardSelectedIndex] = useState<number>(-1);
@@ -57,6 +75,18 @@ export const Interventions: React.FC = () => {
   
   // État pour la navigation dans l'AnimatedCard
   const [selectedCardIndex, setSelectedCardIndex] = useState<number>(-1);
+  
+  // État pour le tri des interventions
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    field: 'cree',
+    direction: 'desc'
+  });
+
+  // État pour le filtre par plage de dates d'échéance
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: null,
+    to: null
+  });
 
   useEffect(() => {
     const loadInterventions = async () => {
@@ -203,12 +233,69 @@ export const Interventions: React.FC = () => {
       return false;
     }
     
-    // Filtre par statut
+    // Filtre par statut d'intervention
     if (selectedStatus && intervention.statut !== selectedStatus) {
       return false;
     }
     
+    // Filtre par statut d'artisan
+    if (selectedArtisanStatuses.length > 0 && intervention.artisan_status) {
+      if (!selectedArtisanStatuses.includes(intervention.artisan_status)) {
+        return false;
+      }
+    }
+    
+    // Filtre par statut de dossier
+    if (selectedDossierStatuses.length > 0 && intervention.artisan_dossier_status) {
+      if (!selectedDossierStatuses.includes(intervention.artisan_dossier_status)) {
+        return false;
+      }
+    }
+    
+    // Filtre par plage de dates d'échéance
+    if (dateRange.from || dateRange.to) {
+      const echeanceDate = new Date(intervention.echeance);
+      
+      if (dateRange.from && echeanceDate < dateRange.from) {
+        return false;
+      }
+      
+      if (dateRange.to && echeanceDate > dateRange.to) {
+        return false;
+      }
+    }
+    
     return true;
+  });
+
+  // Trier les interventions selon la configuration de tri
+  const sortedInterventions = [...filteredInterventions].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortConfig.field) {
+      case 'cree':
+        aValue = new Date(a.cree).getTime();
+        bValue = new Date(b.cree).getTime();
+        break;
+      case 'echeance':
+        aValue = new Date(a.echeance).getTime();
+        bValue = new Date(b.echeance).getTime();
+        break;
+      case 'marge':
+        // Calculer la marge (montant - coûts)
+        aValue = (a.montant || 0) - (a.coutSST || 0) - (a.coutMateriaux || 0) - (a.coutInterventions || 0);
+        bValue = (b.montant || 0) - (b.coutSST || 0) - (b.coutMateriaux || 0) - (b.coutInterventions || 0);
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortConfig.direction === 'asc') {
+      return aValue - bValue;
+    } else {
+      return bValue - aValue;
+    }
   });
 
   // Handlers pour les actions du composant InterventionCard
@@ -293,6 +380,30 @@ export const Interventions: React.FC = () => {
       }
     } catch (error) {
       console.error('Erreur mise à jour artisan:', error);
+    }
+  };
+
+  const handleArtisanStatusChange = async (intervention: Intervention, newStatus: ARTISAN_STATUS) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateArtisanStatus(intervention.id, newStatus);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour statut artisan:', error);
+    }
+  };
+
+  const handleArtisanDossierStatusChange = async (intervention: Intervention, newStatus: ARTISAN_DOSSIER_STATUS) => {
+    try {
+      const updatedIntervention = await InterventionAPI.updateArtisanDossierStatus(intervention.id, newStatus);
+      setInterventions(prev => prev.map(i => i.id === intervention.id ? updatedIntervention : i));
+      if (selectedIntervention?.id === intervention.id) {
+        setSelectedIntervention(updatedIntervention);
+      }
+    } catch (error) {
+      console.error('Erreur mise à jour statut dossier:', error);
     }
   };
 
@@ -781,6 +892,24 @@ export const Interventions: React.FC = () => {
     };
   }, [showStatusMenu]);
 
+  // Gestionnaire pour fermer le menu des filtres épinglables
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.filter-menu-container')) {
+        setShowFilterMenu(false);
+      }
+    };
+
+    if (showFilterMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFilterMenu]);
+
   // Gestionnaire pour le scroll horizontal
   useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
@@ -836,27 +965,26 @@ export const Interventions: React.FC = () => {
       {/* Toolbar */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Filtre par utilisateur */}
+                <div className="flex items-center justify-between">
+            <div className="flex flex-col space-y-4">
+              {/* Première ligne : Filtres compacts */}
+              <div className="flex items-center space-x-6">
+              {/* Filtres utilisateur et échéance côte à côte */}
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-muted-foreground">Utilisateur:</span>
-                <select
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                  className="px-3 py-1.5 text-sm border border-input rounded-md bg-background hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                >
-                  <option value="">Tous les utilisateurs</option>
-                  {uniqueUsers.map(user => (
-                    <option key={user} value={user}>
-                      {user}
-                    </option>
-                  ))}
-                </select>
+                <UserFilter
+                  selectedUser={selectedUser}
+                  onUserChange={setSelectedUser}
+                  users={uniqueUsers}
+                />
+
+                <DateRangeFilter
+                  dateRange={dateRange}
+                  onDateRangeChange={setDateRange}
+                />
               </div>
 
               {/* Filtre par statut */}
-              <div className="flex items-center space-x-2 status-menu-container relative">
+              <div className="flex items-center space-x-2 status-menu-container relative" style={{ paddingLeft: '29px' }}>
                 <div className="flex items-center space-x-1">
                   <span className="text-sm font-medium text-muted-foreground">Statut:</span>
                   <Button
@@ -866,7 +994,7 @@ export const Interventions: React.FC = () => {
                     className="h-6 w-6 p-0"
                   >
                     <Settings className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                  </Button>
+          </Button>
                 </div>
                 
                 {/* Menu déroulant des statuts supplémentaires */}
@@ -881,10 +1009,10 @@ export const Interventions: React.FC = () => {
                         
                         return (
                           <div key={status} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-                            <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2">
                               <IconComponent className="h-3 w-3" />
                               <span className="text-xs">{config.label}</span>
-                            </div>
+          </div>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -896,11 +1024,11 @@ export const Interventions: React.FC = () => {
                               ) : (
                                 <div className="h-3 w-3 border border-gray-300 rounded-full"></div>
                               )}
-                            </Button>
-                          </div>
+          </Button>
+        </div>
                         );
                       })}
-                    </div>
+      </div>
                   </div>
                 )}
                 
@@ -960,21 +1088,45 @@ export const Interventions: React.FC = () => {
                             <div className="h-3 w-3 border border-gray-300 rounded-full hover:border-primary"></div>
                           </Button>
                         )}
-                      </div>
+            </div>
                     );
                   })}
                 </div>
               </div>
 
+              </div>
+
+              {/* Filtres épinglables conditionnels */}
+              {pinnedFilters.artisanStatus && (
+                <ArtisanStatusFilter
+                  selectedStatuses={selectedArtisanStatuses}
+                  onStatusChange={setSelectedArtisanStatuses}
+                />
+              )}
+
+              {pinnedFilters.dossierStatus && (
+                <ArtisanDossierStatusFilter
+                  selectedStatuses={selectedDossierStatuses}
+                  onStatusChange={setSelectedDossierStatuses}
+                />
+              )}
+
               {/* Bouton pour réinitialiser les filtres */}
-              {(selectedUser || selectedStatus || pinnedStatuses.length > 0) && (
+              {(selectedStatus || selectedArtisanStatuses.length > 0 || selectedDossierStatuses.length > 0 || pinnedStatuses.length > 0 || pinnedFilters.artisanStatus || pinnedFilters.dossierStatus) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
                     setSelectedUser('');
                     setSelectedStatus('');
+                    setSelectedArtisanStatuses([]);
+                    setSelectedDossierStatuses([]);
+                    setDateRange({ from: null, to: null });
                     setPinnedStatuses([]);
+                    setPinnedFilters({
+                      artisanStatus: false,
+                      dossierStatus: false
+                    });
                   }}
                   className="text-muted-foreground hover:text-foreground"
                 >
@@ -983,12 +1135,90 @@ export const Interventions: React.FC = () => {
               )}
             </div>
             
-            {/* Export CSV */}
+            {/* Export CSV et icônes */}
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Export CSV
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Download className="h-4 w-4" />
               </Button>
+              
+              {/* Icône filtre pour épingler les filtres */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 relative"
+                        onMouseEnter={() => setShowFilterMenu(true)}
+                      >
+                        <Filter className="h-4 w-4" />
+                        {/* Indicateur de filtres actifs */}
+                        {(pinnedFilters.artisanStatus || pinnedFilters.dossierStatus) && (
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full"></div>
+                        )}
+                      </Button>
+                      
+                      {/* Zone de transition invisible pour éviter la fermeture du menu */}
+                      {showFilterMenu && (
+                        <div 
+                          className="absolute top-full right-0 w-48 h-2 bg-transparent"
+                          onMouseEnter={() => setShowFilterMenu(true)}
+                        />
+                      )}
+                      
+                      {/* Menu des filtres épinglables */}
+                      {showFilterMenu && (
+                        <div 
+                          className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 filter-menu-container"
+                          onMouseEnter={() => setShowFilterMenu(true)}
+                          onMouseLeave={() => setShowFilterMenu(false)}
+                        >
+                          <div className="text-xs font-medium text-gray-600 mb-3">Épingler des filtres</div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                 onClick={() => setPinnedFilters(prev => ({ ...prev, artisanStatus: !prev.artisanStatus }))}>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                <span className="text-xs">Statut artisan</span>
+                              </div>
+                              <div className="h-6 w-6 flex items-center justify-center">
+                                {pinnedFilters.artisanStatus ? (
+                                  <div className="h-3 w-3 bg-primary rounded-full"></div>
+                                ) : (
+                                  <div className="h-3 w-3 border border-gray-300 rounded-full"></div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                 onClick={() => setPinnedFilters(prev => ({ ...prev, dossierStatus: !prev.dossierStatus }))}>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span className="text-xs">Statut dossier</span>
+                              </div>
+                              <div className="h-6 w-6 flex items-center justify-center">
+                                {pinnedFilters.dossierStatus ? (
+                                  <div className="h-3 w-3 bg-primary rounded-full"></div>
+                                ) : (
+                                  <div className="h-3 w-3 border border-gray-300 rounded-full"></div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="w-48 p-3">
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">Filtres épinglables</h4>
+                      <div className="text-xs text-muted-foreground">
+                        Épingler des filtres supplémentaires pour les afficher en permanence
+                      </div>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               {/* Icône d'information pour la navigation au clavier */}
               <TooltipProvider>
@@ -1091,24 +1321,33 @@ export const Interventions: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              {/* Indicateur de progression du scroll */}
-              {Math.abs(scrollAccumulator) > 0 && (
-                <div className="flex items-center space-x-1">
-                  <span>Scroll en cours...</span>
-                  <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full transition-all duration-200 ${
-                        scrollAccumulator > 0 ? 'bg-blue-500' : 'bg-red-500'
-                      }`}
-                      style={{ 
-                        width: `${Math.min(Math.abs(scrollAccumulator) / scrollThreshold * 100, 100)}%`,
-                        transform: `translateX(${scrollAccumulator > 0 ? '0' : '100%'})`
-                      }}
-                    ></div>
+            
+            <div className="flex items-center space-x-4">
+              {/* Composant de tri aligné à droite */}
+              <InterventionSortFilter
+                sortConfig={sortConfig}
+                onSortChange={setSortConfig}
+              />
+              
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                {/* Indicateur de progression du scroll */}
+                {Math.abs(scrollAccumulator) > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <span>Scroll en cours...</span>
+                    <div className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-200 ${
+                          scrollAccumulator > 0 ? 'bg-blue-500' : 'bg-red-500'
+                        }`}
+                        style={{ 
+                          width: `${Math.min(Math.abs(scrollAccumulator) / scrollThreshold * 100, 100)}%`,
+                          transform: `translateX(${scrollAccumulator > 0 ? '0' : '100%'})`
+                        }}
+                      ></div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </CardTitle>
         </CardHeader>
@@ -1127,7 +1366,7 @@ export const Interventions: React.FC = () => {
                 'translate-x-0 opacity-100'
               }`}
             >
-              {filteredInterventions.map((intervention, index) => (
+              {sortedInterventions.map((intervention, index) => (
                 <div
                   key={intervention.id}
                   data-intervention-index={index}
@@ -1156,6 +1395,8 @@ export const Interventions: React.FC = () => {
                     onDateChange={handleDateChange}
                     onAddressChange={handleAddressChange}
                     onArtisanChange={handleArtisanChange}
+                    onArtisanStatusChange={handleArtisanStatusChange}
+                    onArtisanDossierStatusChange={handleArtisanDossierStatusChange}
                     onClientChange={handleClientChange}
                     onDescriptionChange={handleDescriptionChange}
                     onNotesChange={handleNotesChange}
@@ -1190,6 +1431,7 @@ export const Interventions: React.FC = () => {
             onDateChange={handleDateChange}
             onAddressChange={handleAddressChange}
             onArtisanChange={handleArtisanChange}
+            onArtisanStatusChange={handleArtisanStatusChange}
             onCoutSSTChange={handleCoutSSTChange}
             onCoutMateriauxChange={handleCoutMateriauxChange}
             onCoutInterventionsChange={handleCoutInterventionsChange}

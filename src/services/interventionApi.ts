@@ -1,11 +1,15 @@
 // API fonctionnelle pour les interventions
 // Gestion des modifications de prix et calculs de marge
 
+import { ARTISAN_STATUS, ARTISAN_DOSSIER_STATUS } from '@/types/artisan';
+
 export interface Intervention {
   id: string;
   client: string;
   artisan: string;
   artisan_metier?: string;
+  artisan_status?: ARTISAN_STATUS; // Nouveau champ pour le statut d'artisan
+  artisan_dossier_status?: ARTISAN_DOSSIER_STATUS; // Nouveau champ pour le statut de dossier
   agence?: string;
   utilisateur_assigné?: string;
   reference?: string;
@@ -28,6 +32,8 @@ let interventionsData: Intervention[] = [
     client: 'Entreprise ABC',
     artisan: 'Jean Dupont',
     artisan_metier: 'Electricite',
+    artisan_status: ARTISAN_STATUS.EXPERT,
+    artisan_dossier_status: ARTISAN_DOSSIER_STATUS.COMPLET,
     agence: 'Paris Nord',
     utilisateur_assigné: 'admin',
     reference: 'REF-2024-001',
@@ -46,6 +52,8 @@ let interventionsData: Intervention[] = [
     client: 'Résidence Les Jardins',
     artisan: 'Marie Martin',
     artisan_metier: 'Plomberie',
+    artisan_status: ARTISAN_STATUS.CONFIRME,
+    artisan_dossier_status: ARTISAN_DOSSIER_STATUS.A_FINALISER,
     agence: 'Boulogne',
     utilisateur_assigné: 'Morin',
     reference: 'REF-2024-002',
@@ -64,6 +72,8 @@ let interventionsData: Intervention[] = [
     client: 'Restaurant Le Gourmet',
     artisan: 'Pierre Durand',
     artisan_metier: 'Menuiserie',
+    artisan_status: ARTISAN_STATUS.NOVICE,
+    artisan_dossier_status: ARTISAN_DOSSIER_STATUS.INCOMPLET,
     agence: 'Paris Centre',
     utilisateur_assigné: 'admin',
     reference: 'REF-2024-003',
@@ -82,6 +92,8 @@ let interventionsData: Intervention[] = [
     client: 'Boutique Mode & Co',
     artisan: 'Sophie Bernard',
     artisan_metier: 'Peinture',
+    artisan_status: ARTISAN_STATUS.POTENTIEL,
+    artisan_dossier_status: ARTISAN_DOSSIER_STATUS.INCOMPLET,
     agence: 'Paris Est',
     utilisateur_assigné: 'Morin',
     reference: 'REF-2024-004',
@@ -94,15 +106,56 @@ let interventionsData: Intervention[] = [
     coutSST: 80,
     coutMateriaux: 150,
     coutInterventions: 200
+  },
+  {
+    id: 'INT-2024-005',
+    client: 'Hôtel Le Luxe',
+    artisan: 'Marc Dubois',
+    artisan_metier: 'Climatisation',
+    artisan_status: ARTISAN_STATUS.FORMATION,
+    artisan_dossier_status: ARTISAN_DOSSIER_STATUS.A_FINALISER,
+    agence: 'Paris Ouest',
+    utilisateur_assigné: 'admin',
+    reference: 'REF-2024-005',
+    statut: 'devis_envoye',
+    cree: '2024-01-14',
+    echeance: '2024-01-25',
+    description: 'Maintenance système climatisation',
+    adresse: 'Champs-Élysées, 75008 Paris',
+    montant: 1800,
+    coutSST: 250,
+    coutMateriaux: 400,
+    coutInterventions: 800
+  },
+  {
+    id: 'INT-2024-006',
+    client: 'Bureau Central',
+    artisan: 'Luc Moreau',
+    artisan_metier: 'Electricite',
+    artisan_status: ARTISAN_STATUS.ONE_SHOT,
+    artisan_dossier_status: ARTISAN_DOSSIER_STATUS.COMPLET,
+    agence: 'Paris Sud',
+    utilisateur_assigné: 'Morin',
+    reference: 'REF-2024-006',
+    statut: 'accepte',
+    cree: '2024-01-13',
+    echeance: '2024-01-21',
+    description: 'Installation éclairage LED',
+    adresse: 'Rue de Rivoli, 75001 Paris',
+    montant: 950,
+    coutSST: 120,
+    coutMateriaux: 300,
+    coutInterventions: 400
   }
 ];
 
 // Fonctions utilitaires
 export const calculateMarge = (intervention: Intervention): number => {
-  const coutInterventions = intervention.coutInterventions || 0;
+  const montant = intervention.montant || 0;
   const coutSST = intervention.coutSST || 0;
   const coutMateriaux = intervention.coutMateriaux || 0;
-  return coutInterventions - coutSST - coutMateriaux;
+  const coutInterventions = intervention.coutInterventions || 0;
+  return montant - coutSST - coutMateriaux - coutInterventions;
 };
 
 export const formatCurrency = (amount?: number): string => {
@@ -204,6 +257,32 @@ export const InterventionAPI = {
     }
 
     intervention.artisan = newArtisan;
+    return { ...intervention };
+  },
+
+  // Mettre à jour le statut d'artisan
+  async updateArtisanStatus(id: string, newStatus: ARTISAN_STATUS): Promise<Intervention> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const intervention = interventionsData.find(i => i.id === id);
+    if (!intervention) {
+      throw new Error('Intervention non trouvée');
+    }
+
+    intervention.artisan_status = newStatus;
+    return { ...intervention };
+  },
+
+  // Mettre à jour le statut de dossier
+  async updateArtisanDossierStatus(id: string, newStatus: ARTISAN_DOSSIER_STATUS): Promise<Intervention> {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    const intervention = interventionsData.find(i => i.id === id);
+    if (!intervention) {
+      throw new Error('Intervention non trouvée');
+    }
+
+    intervention.artisan_dossier_status = newStatus;
     return { ...intervention };
   },
 
@@ -310,6 +389,8 @@ export const InterventionAPI = {
         client: 'Entreprise ABC',
         artisan: 'Jean Dupont',
         artisan_metier: 'Electricite',
+        artisan_status: ARTISAN_STATUS.EXPERT,
+        artisan_dossier_status: ARTISAN_DOSSIER_STATUS.COMPLET,
         agence: 'Paris Nord',
         utilisateur_assigné: 'admin',
         reference: 'REF-2024-001',
@@ -328,6 +409,8 @@ export const InterventionAPI = {
         client: 'Résidence Les Jardins',
         artisan: 'Marie Martin',
         artisan_metier: 'Plomberie',
+        artisan_status: ARTISAN_STATUS.CONFIRME,
+        artisan_dossier_status: ARTISAN_DOSSIER_STATUS.A_FINALISER,
         agence: 'Boulogne',
         utilisateur_assigné: 'Morin',
         reference: 'REF-2024-002',
@@ -346,6 +429,8 @@ export const InterventionAPI = {
         client: 'Restaurant Le Gourmet',
         artisan: 'Pierre Durand',
         artisan_metier: 'Menuiserie',
+        artisan_status: ARTISAN_STATUS.NOVICE,
+        artisan_dossier_status: ARTISAN_DOSSIER_STATUS.INCOMPLET,
         agence: 'Paris Centre',
         utilisateur_assigné: 'admin',
         reference: 'REF-2024-003',
@@ -364,6 +449,8 @@ export const InterventionAPI = {
         client: 'Boutique Mode & Co',
         artisan: 'Sophie Bernard',
         artisan_metier: 'Peinture',
+        artisan_status: ARTISAN_STATUS.POTENTIEL,
+        artisan_dossier_status: ARTISAN_DOSSIER_STATUS.INCOMPLET,
         agence: 'Paris Est',
         utilisateur_assigné: 'Morin',
         reference: 'REF-2024-004',

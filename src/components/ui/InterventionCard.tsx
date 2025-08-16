@@ -28,6 +28,9 @@ import {
 } from 'lucide-react';
 
 import { StatusBadge, MetierBadge, AgenceBadge } from '@/components/ui/BadgeComponents';
+import { ArtisanStatusBadge } from '@/components/ui/ArtisanStatusBadge';
+import { ArtisanDossierStatusIcon } from '@/components/ui/ArtisanDossierStatusIcon';
+import { ARTISAN_STATUS, ARTISAN_DOSSIER_STATUS } from '@/types/artisan';
 import AnimatedCard from './AnimatedCard';
 import { InterventionAPI, calculateMarge, formatCurrency } from '@/services/interventionApi';
 import { EditableCell } from './EditableCell';
@@ -44,6 +47,8 @@ interface Intervention {
   client: string;
   artisan: string;
   artisan_metier?: string;
+  artisan_status?: ARTISAN_STATUS;
+  artisan_dossier_status?: ARTISAN_DOSSIER_STATUS;
   agence?: string;
   utilisateur_assigné?: string;
   reference?: string;
@@ -70,6 +75,8 @@ interface InterventionCardProps {
   onDateChange?: (intervention: Intervention, field: string, date: string) => void;
   onAddressChange?: (intervention: Intervention, address: string) => void;
   onArtisanChange?: (intervention: Intervention, artisan: string) => void;
+  onArtisanStatusChange?: (intervention: Intervention, newStatus: ARTISAN_STATUS) => void;
+  onArtisanDossierStatusChange?: (intervention: Intervention, newStatus: ARTISAN_DOSSIER_STATUS) => void;
   onClientChange?: (intervention: Intervention, client: string) => void;
   onDescriptionChange?: (intervention: Intervention, description: string) => void;
   onNotesChange?: (intervention: Intervention, notes: string) => void;
@@ -95,6 +102,8 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   onDateChange,
   onAddressChange,
   onArtisanChange,
+  onArtisanStatusChange,
+  onArtisanDossierStatusChange,
   onClientChange,
   onDescriptionChange,
   onNotesChange,
@@ -345,6 +354,23 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
 
   const getMarge = () => {
     return calculateMarge(intervention);
+  };
+
+  const getMargeColor = (marge: number) => {
+    if (marge < 0) {
+      return 'text-red-600'; // Rouge pour les marges négatives
+    }
+    
+    // Calculer le pourcentage de marge par rapport au montant total
+    const montantTotal = (intervention.montant || 0);
+    if (montantTotal > 0) {
+      const pourcentageMarge = (marge / montantTotal) * 100;
+      if (pourcentageMarge < 15) {
+        return 'text-yellow-600'; // Jaune pour les marges < 15%
+      }
+    }
+    
+    return 'text-green-600'; // Vert pour les marges normales
   };
 
   const getStatusConfig = (statut: string) => {
@@ -621,6 +647,12 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
             
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">{intervention.artisan}</span>
+              {intervention.artisan_dossier_status && (
+                <ArtisanDossierStatusIcon status={intervention.artisan_dossier_status} size="sm" />
+              )}
+              {intervention.artisan_status && (
+                <ArtisanStatusBadge status={intervention.artisan_status} size="sm" />
+              )}
               {intervention.artisan_metier && (
                 <MetierBadge metier={intervention.artisan_metier as import('@/components/ui/BadgeComponents').ArtisanMetier} size="sm" />
               )}
@@ -782,7 +814,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
             {/* Informations */}
             <div className="space-y-2 text-right">
               <div className="space-y-1 text-right">
-                <div className="flex items-center gap-2 text-lg font-bold text-green-600 justify-end">
+                <div className={`flex items-center gap-2 text-lg font-bold justify-end ${getMargeColor(getMarge())}`}>
                   <Euro className="h-5 w-5" />
                   <span>{formatCurrency(getMarge())}</span>
                 </div>
@@ -1047,7 +1079,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   {/* Marge actuelle avec icône engrenage */}
                   <div className="text-sm flex items-center gap-2">
                     <span className="text-gray-600">Marge actuelle:</span>
-                    <div className={`font-semibold ${getMarge() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`font-semibold ${getMargeColor(getMarge())}`}>
                       {formatCurrency(getMarge())} ({intervention.coutInterventions > 0 ? Math.round((getMarge() / intervention.coutInterventions) * 100) : 0}%)
                     </div>
                     <div 
