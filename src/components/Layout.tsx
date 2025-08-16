@@ -28,6 +28,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const isActive = (href: string) => location.pathname === href;
 
+  const getActiveStyle = (href: string) => {
+    if (isActive(href)) {
+      if (href === '/interventions') {
+        return 'bg-gray-800 text-white'; // Couleur sombre pour Interventions
+      }
+      return 'bg-primary text-primary-foreground'; // Couleur normale pour les autres
+    }
+    return 'text-muted-foreground hover:bg-accent hover:text-accent-foreground';
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
@@ -55,11 +65,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  }`}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${getActiveStyle(item.href)}`}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   {sidebarOpen && <span className="ml-3">{item.name}</span>}

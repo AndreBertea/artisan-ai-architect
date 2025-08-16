@@ -78,6 +78,10 @@ interface InterventionCardProps {
   onCoutInterventionsChange?: (intervention: Intervention, amount: number) => void;
   onUserChange?: (intervention: Intervention, username: string) => void;
   className?: string;
+  hideBorder?: boolean;
+  keyboardHovered?: boolean;
+  selectedActionIndex?: number;
+  selectedCardIndex?: number;
 }
 
 export const InterventionCard: React.FC<InterventionCardProps> = ({
@@ -98,7 +102,11 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   onCoutMateriauxChange,
   onCoutInterventionsChange,
   onUserChange,
-  className = ''
+  className = '',
+  hideBorder = false,
+  keyboardHovered = false,
+  selectedActionIndex = -1,
+  selectedCardIndex = -1
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -123,6 +131,53 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   const [pinnedStatuses, setPinnedStatuses] = useState<string[]>(['demande', 'devis_envoye', 'accepte', 'en_cours']);
 
   const navigate = useNavigate();
+
+  // Combiner le hover de la souris avec le hover du clavier
+  const isAnyHovered = isHovered || keyboardHovered;
+  
+  // Combiner la sélection d'action souris et clavier
+  const isDocumentHovered = isAnyHovered && (selectedActionIndex === 2 || isHovered);
+
+  // Effet pour mettre à jour la position de l'animation lors de la sélection clavier
+  useEffect(() => {
+    if (selectedActionIndex === 2 && keyboardHovered) {
+      // Trouver l'élément document button et calculer sa position
+      const documentButton = document.querySelector(`[data-intervention-id="${intervention.id}"] .document-button`) as HTMLElement;
+      if (documentButton) {
+        const rect = documentButton.getBoundingClientRect();
+        setAnimationPosition({
+          top: rect.top - 200,
+          left: rect.left - 90
+        });
+        setShowDocumentAnimation(true);
+      }
+    } else if (selectedActionIndex !== 2) {
+      setShowDocumentAnimation(false);
+    }
+  }, [selectedActionIndex, keyboardHovered, intervention.id]);
+
+  // Effet pour gérer les effets de hover des icônes lors de la sélection clavier
+  useEffect(() => {
+    if (keyboardHovered && selectedActionIndex >= 0) {
+      // Ajouter des effets visuels spécifiques selon l'icône sélectionnée
+      const selectedButton = document.querySelector(`[data-intervention-id="${intervention.id}"] .${selectedActionIndex === 0 ? 'email-button' : selectedActionIndex === 1 ? 'phone-button' : 'document-button'}`) as HTMLElement;
+      if (selectedButton) {
+        // L'effet visuel est déjà géré par les classes CSS
+        console.log(`Icône ${selectedActionIndex} sélectionnée pour l'intervention ${intervention.id}`);
+      }
+    }
+  }, [selectedActionIndex, keyboardHovered, intervention.id]);
+
+  // Effet pour gérer l'état hover de l'AnimatedCard lors de la sélection clavier
+  useEffect(() => {
+    if (keyboardHovered && selectedActionIndex === 2) {
+      // Garder l'AnimatedCard ouvert quand on est sur l'icône document
+      setShowDocumentAnimation(true);
+    } else if (selectedActionIndex !== 2) {
+      // Fermer l'AnimatedCard quand on n'est plus sur l'icône document
+      setShowDocumentAnimation(false);
+    }
+  }, [keyboardHovered, selectedActionIndex]);
 
   // Liste des utilisateurs (mock - à remplacer par les données des paramètres)
   const users = [
@@ -384,7 +439,10 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
         hover:shadow-lg hover:border-primary/20
         cursor-pointer
         ${isExpanded ? 'shadow-lg border-primary/20' : ''}
+        ${hideBorder ? 'border-0' : ''}
       `}
+      data-card-clickable="true"
+      data-intervention-id={intervention.id}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
@@ -393,7 +451,10 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       {/* Indicateur de statut coloré */}
       <div 
         className="absolute left-0 top-0 bottom-0 w-1 transition-all duration-300 group-hover:w-2"
-        style={{ backgroundColor: statusConfig.iconColor }}
+        style={{ 
+          backgroundColor: statusConfig.iconColor,
+          width: isAnyHovered ? '8px' : '4px'
+        }}
       />
 
       <CardHeader className="py-2">
@@ -576,7 +637,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
             {/* Actions Menu */}
             <div className={`
               flex items-center gap-2 transition-all duration-300
-              ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}
+              ${isAnyHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}
             `}>
               
               {/* Desktop: Individual Buttons */}
@@ -586,7 +647,9 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   size="sm"
                   onClick={() => onSendEmail?.(intervention)}
                   title="Envoyer un email"
-                  className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600"
+                  className={`h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200 email-button ${
+                    selectedActionIndex === 0 ? 'bg-blue-100 text-blue-600 ring-2 ring-blue-500 scale-110' : ''
+                  }`}
                 >
                   <Mail className="h-4 w-4" />
                 </Button>
@@ -596,7 +659,9 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   size="sm"
                   onClick={() => onCall?.(intervention)}
                   title="Appeler"
-                  className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600"
+                  className={`h-8 w-8 p-0 hover:bg-green-100 hover:text-green-600 transition-all duration-200 phone-button ${
+                    selectedActionIndex === 1 ? 'bg-green-100 text-green-600 ring-2 ring-green-500 scale-110' : ''
+                  }`}
                 >
                   <Phone className="h-4 w-4" />
                 </Button>
@@ -620,13 +685,15 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                       // Pas de fermeture immédiate, on laisse l'overlay gérer
                     }}
                     title="Ajouter un document"
-                    className="h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600"
+                    className={`h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600 transition-all duration-200 document-button ${
+                      selectedActionIndex === 2 ? 'bg-purple-100 text-purple-600 ring-2 ring-purple-500 scale-110' : ''
+                    }`}
                   >
                     <FilePlus className="h-4 w-4" />
                   </Button>
                   
                   {/* Overlay d'animation au-dessus de l'icône document */}
-                  {showDocumentAnimation && createPortal(
+                  {(showDocumentAnimation || (selectedActionIndex === 2 && keyboardHovered)) && createPortal(
                     <div 
                       className="fixed z-[9999]"
                       style={{
@@ -636,7 +703,9 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                       }}
                       onMouseEnter={() => setShowDocumentAnimation(true)}
                       onMouseLeave={() => {
-                        setShowDocumentAnimation(false);
+                        if (!keyboardHovered || selectedActionIndex !== 2) {
+                          setShowDocumentAnimation(false);
+                        }
                       }}
                     >
                       {/* Zone de transition invisible pour éviter la fermeture */}
@@ -654,8 +723,21 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                       />
                       <AnimatedCard 
                         onMouseEnter={() => setShowDocumentAnimation(true)} 
-                        onMouseLeave={() => setShowDocumentAnimation(false)}
+                        onMouseLeave={() => {
+                          if (!keyboardHovered || selectedActionIndex !== 2) {
+                            setShowDocumentAnimation(false);
+                          }
+                        }}
                         statusColor={getStatusColor(intervention.statut)}
+                        isKeyboardMode={keyboardHovered && selectedActionIndex === 2}
+                        selectedCardIndex={keyboardHovered && selectedActionIndex === 2 ? selectedCardIndex : -1}
+                        selectedActionIndex={selectedActionIndex}
+                        onCardSelect={(index) => {
+                          if (keyboardHovered && selectedActionIndex === 2) {
+                            // La gestion de selectedCardIndex se fait maintenant dans le composant parent
+                            console.log('Carte sélectionnée:', index);
+                          }
+                        }}
                       />
                     </div>,
                     document.body
@@ -729,7 +811,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
       <div className={`
         absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-primary/10 
         pointer-events-none rounded-lg transition-opacity duration-300
-        ${isHovered ? 'opacity-100' : 'opacity-0'}
+        ${isAnyHovered ? 'opacity-100' : 'opacity-0'}
       `} />
     </Card>
 

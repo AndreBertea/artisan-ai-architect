@@ -1,15 +1,49 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface AnimatedCardProps {
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   statusColor?: string; // Couleur du statut pour synchroniser le background
+  isKeyboardMode?: boolean; // Mode navigation clavier
+  selectedCardIndex?: number; // Index de la carte sélectionnée par le clavier
+  selectedActionIndex?: number; // Index de l'action sélectionnée par le clavier
+  onCardSelect?: (index: number) => void; // Callback pour la sélection de carte
 }
 
-const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave, statusColor = 'rgba(255, 255, 255, 0.91)' }) => {
+const AnimatedCard: React.FC<AnimatedCardProps> = ({ 
+  onMouseEnter, 
+  onMouseLeave, 
+  statusColor = 'rgba(255, 255, 255, 0.91)',
+  isKeyboardMode = false,
+  selectedCardIndex = -1,
+  selectedActionIndex = -1,
+  onCardSelect
+}) => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [isContainerHovered, setIsContainerHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Combiner le hover de la souris avec la sélection clavier
+  const activeCard = isKeyboardMode && selectedCardIndex >= 0 ? selectedCardIndex : hoveredCard;
+
+  // Effet pour forcer l'état hover quand une carte est sélectionnée par le clavier
+  useEffect(() => {
+    if (isKeyboardMode && selectedActionIndex === 2) {
+      // Forcer l'état hover du conteneur quand on est sur l'icône document
+      setIsContainerHovered(true);
+      if (selectedCardIndex >= 0) {
+        // Si une carte est sélectionnée, la définir comme carte active
+        setHoveredCard(selectedCardIndex);
+      } else {
+        // Sinon, pas de carte active mais conteneur en hover
+        setHoveredCard(null);
+      }
+    } else if (!isKeyboardMode) {
+      // Réinitialiser seulement si on n'est plus en mode clavier
+      setIsContainerHovered(false);
+      setHoveredCard(null);
+    }
+  }, [isKeyboardMode, selectedActionIndex, selectedCardIndex]);
 
   // Fonction pour ajouter la transparence à la couleur
   const getTransparentColor = (color: string) => {
@@ -37,9 +71,9 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
 
   // Fonction pour calculer le scale basé sur la distance de la carte survolée
   const getCardScale = (cardIndex: number) => {
-    if (!isContainerHovered || hoveredCard === null) return 1; // Taille normale par défaut
+    if (!isContainerHovered || activeCard === null) return 1; // Taille normale par défaut
     
-    const distance = Math.abs(cardIndex - hoveredCard);
+    const distance = Math.abs(cardIndex - activeCard);
     
     if (distance === 0) return 1; // Carte survolée : taille normale
     if (distance === 1) return 0.85; // Cartes adjacentes : dézoom 15%
@@ -50,9 +84,9 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
 
   // Fonction pour calculer le z-index basé sur la distance
   const getCardZIndex = (cardIndex: number) => {
-    if (!isContainerHovered || hoveredCard === null) return 1;
+    if (!isContainerHovered || activeCard === null) return 1;
     
-    const distance = Math.abs(cardIndex - hoveredCard);
+    const distance = Math.abs(cardIndex - activeCard);
     
     if (distance === 0) return 10; // Carte survolée au premier plan
     if (distance === 1) return 5; // Cartes adjacentes
@@ -85,6 +119,9 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
 
   const handleCardMouseEnter = (cardIndex: number) => {
     setHoveredCard(cardIndex);
+    if (onCardSelect) {
+      onCardSelect(cardIndex);
+    }
   };
 
   const handleCardMouseLeave = () => {
@@ -94,13 +131,17 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
   // Gestionnaire pour l'entrée de la souris sur le conteneur
   const handleContainerMouseEnter = () => {
     setIsContainerHovered(true);
-    setHoveredCard(2); // Par défaut, on se situe sur la carte Earn (index 2)
+    if (!isKeyboardMode) {
+      setHoveredCard(2); // Par défaut, on se situe sur la carte Earn (index 2)
+    }
   };
 
   // Gestionnaire pour la sortie de la souris du conteneur
   const handleContainerMouseLeave = () => {
     setIsContainerHovered(false);
-    setHoveredCard(null);
+    if (!isKeyboardMode) {
+      setHoveredCard(null);
+    }
   };
 
   return (
