@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,9 @@ import {
   ChevronUp,
   Wrench
 } from 'lucide-react';
+
 import { StatusBadge, MetierBadge, AgenceBadge } from '@/components/ui/BadgeComponents';
+import AnimatedCard from './AnimatedCard';
 import { InterventionAPI, calculateMarge, formatCurrency } from '@/services/interventionApi';
 import { EditableCell } from './EditableCell';
 import {
@@ -102,6 +105,9 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   const [showMarginEdit, setShowMarginEdit] = useState(false);
   const [showStatusEdit, setShowStatusEdit] = useState(false);
   const [activeColorPicker, setActiveColorPicker] = useState<string | null>(null);
+
+  const [showDocumentAnimation, setShowDocumentAnimation] = useState(false);
+  const [animationPosition, setAnimationPosition] = useState({ top: 0, left: 0 });
   const [statusColors, setStatusColors] = useState<Record<string, string>>({
     demande: '#3B82F6',
     devis_envoye: '#8B5CF6',
@@ -595,15 +601,68 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   <Phone className="h-4 w-4" />
                 </Button>
                 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onAddDocument?.(intervention)}
-                  title="Ajouter un document"
-                  className="h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600"
-                >
-                  <FilePlus className="h-4 w-4" />
-                </Button>
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      onAddDocument?.(intervention);
+                    }}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setAnimationPosition({
+                        top: rect.top - 200,
+                        left: rect.left - 90
+                      });
+                      setShowDocumentAnimation(true);
+                    }}
+                    onMouseLeave={() => {
+                      // Pas de fermeture immédiate, on laisse l'overlay gérer
+                    }}
+                    title="Ajouter un document"
+                    className="h-8 w-8 p-0 hover:bg-purple-100 hover:text-purple-600"
+                  >
+                    <FilePlus className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Overlay d'animation au-dessus de l'icône document */}
+                  {showDocumentAnimation && createPortal(
+                    <div 
+                      className="fixed z-[9999]"
+                      style={{
+                        top: `${animationPosition.top}px`,
+                        left: `${animationPosition.left}px`,
+                        pointerEvents: 'auto'
+                      }}
+                      onMouseEnter={() => setShowDocumentAnimation(true)}
+                      onMouseLeave={() => {
+                        setShowDocumentAnimation(false);
+                      }}
+                    >
+                      {/* Zone de transition invisible pour éviter la fermeture */}
+                      <div 
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '50px',
+                          height: '20px',
+                          pointerEvents: 'auto'
+                        }}
+                        onMouseEnter={() => setShowDocumentAnimation(true)}
+                      />
+                      <AnimatedCard 
+                        onMouseEnter={() => setShowDocumentAnimation(true)} 
+                        onMouseLeave={() => setShowDocumentAnimation(false)}
+                        statusColor={getStatusColor(intervention.statut)}
+                      />
+                    </div>,
+                    document.body
+                  )}
+                  
+
+                </div>
               </div>
 
               {/* Mobile: Dropdown Menu */}
@@ -627,7 +686,9 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                       <Phone className="h-4 w-4 mr-2" />
                       Appeler
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onAddDocument?.(intervention)}>
+                    <DropdownMenuItem 
+                      onClick={() => onAddDocument?.(intervention)}
+                    >
                       <FilePlus className="h-4 w-4 mr-2" />
                       Document
                     </DropdownMenuItem>
