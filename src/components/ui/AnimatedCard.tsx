@@ -91,15 +91,16 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
     setHoveredCard(null);
   };
 
+  // Gestionnaire pour l'entrée de la souris sur le conteneur
   const handleContainerMouseEnter = () => {
     setIsContainerHovered(true);
-    onMouseEnter?.();
+    setHoveredCard(2); // Par défaut, on se situe sur la carte Earn (index 2)
   };
 
+  // Gestionnaire pour la sortie de la souris du conteneur
   const handleContainerMouseLeave = () => {
     setIsContainerHovered(false);
     setHoveredCard(null);
-    onMouseLeave?.();
   };
 
   return (
@@ -134,11 +135,11 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
             height: '200px',
             background: `linear-gradient(${transparentColor}, transparent)`,
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 25px 25px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 25px 25px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            borderRadius: '10px',
+            borderRadius: '40px',
             margin: '0 -45px',
             backdropFilter: 'blur(10px)',
             transition: 'all 200ms ease-out',
@@ -167,11 +168,11 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
             height: '200px',
             background: `linear-gradient(${transparentColor}, transparent)`,
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 25px 25px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 25px 25px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            borderRadius: '10px',
+            borderRadius: '40px',
             margin: '0 -45px',
             backdropFilter: 'blur(10px)',
             transition: 'all 200ms ease-out',
@@ -200,11 +201,11 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
             height: '200px',
             background: `linear-gradient(${transparentColor}, transparent)`,
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 25px 25px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 25px 25px rgba(0, 0, 0, 0.15)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            borderRadius: '10px',
+            borderRadius: '40px',
             margin: '0 -45px',
             backdropFilter: 'blur(10px)',
             transition: 'all 200ms ease-out',
@@ -249,7 +250,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({ onMouseEnter, onMouseLeave,
           
           /* État initial - scale 0.4 + rotations + descente de 60px */
           .animated-stack {
-            transform: scale(0.4) translateY(60px) translateX(-30px);
+            transform: scale(0.4) translateY(60px) translateX(-40px);
           }
           
           /* Hover du conteneur → scale 0.6 + alignement horizontal + décalage global */
