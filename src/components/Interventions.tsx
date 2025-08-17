@@ -32,6 +32,7 @@ import { InterventionCard } from '@/components/ui/InterventionCard';
 import { InterventionDetailCard } from '@/components/ui/InterventionDetailCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ARTISAN_STATUS, ARTISAN_DOSSIER_STATUS } from '@/types/artisan';
+import { Pagination } from '@/components/ui/pagination';
 
 // Import de l'interface depuis l'API
 import { Intervention } from '@/services/interventionApi';
@@ -42,6 +43,14 @@ export const Interventions: React.FC = () => {
   const [selectedIntervention, setSelectedIntervention] = useState<Intervention | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [hasPrev, setHasPrev] = useState(false);
   
   // États pour les filtres
   const [selectedUser, setSelectedUser] = useState<string>('');
@@ -88,60 +97,84 @@ export const Interventions: React.FC = () => {
     to: null
   });
 
-  useEffect(() => {
-    const loadInterventions = async () => {
-      try {
-        const data = await InterventionAPI.getAll();
-        setInterventions(data);
-        
-        // Vérifier si une intervention est sélectionnée via l'URL
-        const selectedId = searchParams.get('selected');
-        if (selectedId) {
-          const intervention = data.find((i: Intervention) => i.id === selectedId);
-          if (intervention) {
-            setSelectedIntervention(intervention);
-          }
+  // Fonction pour charger les interventions avec pagination et filtres
+  const loadInterventions = async (page = currentPage, resetPage = false) => {
+    setLoading(true);
+    try {
+      const targetPage = resetPage ? 1 : page;
+      const result = await InterventionAPI.getPaginated({
+        page: targetPage,
+        pageSize,
+        user: selectedUser || undefined,
+        status: selectedStatus || undefined,
+        artisanStatuses: selectedArtisanStatuses.length > 0 ? selectedArtisanStatuses : undefined,
+        dossierStatuses: selectedDossierStatuses.length > 0 ? selectedDossierStatuses : undefined,
+        dateRange: dateRange.from || dateRange.to ? dateRange : undefined,
+        sortField: sortConfig.field,
+        sortDirection: sortConfig.direction
+      });
+      
+      setInterventions(result.data);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+      setCurrentPage(result.currentPage);
+      setHasNext(result.hasNext);
+      setHasPrev(result.hasPrev);
+      
+      // Vérifier si une intervention est sélectionnée via l'URL
+      const selectedId = searchParams.get('selected');
+      if (selectedId) {
+        const intervention = result.data.find((i: Intervention) => i.id === selectedId);
+        if (intervention) {
+          setSelectedIntervention(intervention);
         }
-      } catch (error) {
-        console.error('Erreur chargement interventions:', error);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Erreur chargement interventions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadInterventions();
-  }, [searchParams]);
+  // Charger les interventions au montage et quand les filtres changent
+  useEffect(() => {
+    loadInterventions(1, true);
+  }, [selectedUser, selectedStatus, selectedArtisanStatuses, selectedDossierStatuses, dateRange, sortConfig]);
+
+  // Charger les interventions quand la page change
+  useEffect(() => {
+    if (currentPage > 1) {
+      loadInterventions(currentPage, false);
+    }
+  }, [currentPage]);
 
   useEffect(() => {
     const handleSearchFilter = (event: CustomEvent) => {
       const { filterKey, value, page } = event.detail;
       if (page === '/interventions') {
-        // Recharger les données originales d'abord
-        const loadOriginalData = async () => {
-          try {
-            const data = await InterventionAPI.getAll();
-            const originalInterventions = data;
-            // Appliquer le filtre
-            const filtered = originalInterventions.filter((intervention: Intervention) => {
-              switch (filterKey) {
-                case 'statut':
-                  return intervention.statut === value;
-                case 'artisan':
-                  return intervention.artisan.toLowerCase().includes(value.toLowerCase());
-                case 'client':
-                  return intervention.client.toLowerCase().includes(value.toLowerCase());
-                case 'date':
-                  return intervention.cree === value || intervention.echeance === value;
-                default:
-                  return true;
-              }
-            });
-            setInterventions(filtered);
-          } catch (error) {
-            console.error('Erreur lors du filtrage:', error);
-          }
-        };
-        loadOriginalData();
+        // Appliquer le filtre approprié
+        switch (filterKey) {
+          case 'statut':
+            setSelectedStatus(value);
+            break;
+          case 'artisan':
+            // Pour les filtres d'artisan, on pourrait ajouter un état spécifique
+            // Pour l'instant, on recharge avec les filtres actuels
+            loadInterventions(1, true);
+            break;
+          case 'client':
+            // Pour les filtres de client, on pourrait ajouter un état spécifique
+            // Pour l'instant, on recharge avec les filtres actuels
+            loadInterventions(1, true);
+            break;
+          case 'date':
+            // Pour les filtres de date, on pourrait ajouter un état spécifique
+            // Pour l'instant, on recharge avec les filtres actuels
+            loadInterventions(1, true);
+            break;
+          default:
+            loadInterventions(1, true);
+        }
       }
     };
     window.addEventListener('searchFilter', handleSearchFilter as EventListener);
@@ -150,9 +183,24 @@ export const Interventions: React.FC = () => {
     };
   }, []);
 
-  // Obtenir les listes uniques pour les filtres
-  const uniqueUsers = Array.from(new Set(interventions.map(i => i.utilisateur_assigné).filter(Boolean)));
-  const uniqueStatuses = Array.from(new Set(interventions.map(i => i.statut)));
+  // Obtenir les listes uniques pour les filtres (depuis toutes les données)
+  const [allInterventions, setAllInterventions] = useState<Intervention[]>([]);
+  
+  // Charger toutes les interventions pour les listes de filtres
+  useEffect(() => {
+    const loadAllInterventions = async () => {
+      try {
+        const data = await InterventionAPI.getAll();
+        setAllInterventions(data);
+      } catch (error) {
+        console.error('Erreur chargement toutes les interventions:', error);
+      }
+    };
+    loadAllInterventions();
+  }, []);
+  
+  const uniqueUsers = Array.from(new Set(allInterventions.map(i => i.utilisateur_assigné).filter(Boolean)));
+  const uniqueStatuses = Array.from(new Set(allInterventions.map(i => i.statut)));
 
   // Configuration des statuts avec icônes et couleurs
   const statusConfig = {
@@ -178,12 +226,12 @@ export const Interventions: React.FC = () => {
   // Statuts à afficher (par défaut + épinglés)
   const displayedStatuses = [...defaultStatuses, ...pinnedStatuses];
 
-  // Fonction pour calculer le nombre d'interventions par statut
+  // Fonction pour calculer le nombre d'interventions par statut (depuis toutes les données)
   const getInterventionCountByStatus = (status: string) => {
     if (status === '') {
-      return interventions.length; // Toutes les interventions
+      return allInterventions.length; // Toutes les interventions
     }
-    return interventions.filter(intervention => intervention.statut === status).length;
+    return allInterventions.filter(intervention => intervention.statut === status).length;
   };
 
   // Fonction pour épingler un statut
@@ -226,77 +274,8 @@ export const Interventions: React.FC = () => {
   const [scrollAccumulator, setScrollAccumulator] = useState(0);
   const scrollThreshold = 100; // Seuil pour déclencher le changement de statut
 
-  // Filtrer les interventions selon les critères sélectionnés
-  const filteredInterventions = interventions.filter(intervention => {
-    // Filtre par utilisateur
-    if (selectedUser && intervention.utilisateur_assigné !== selectedUser) {
-      return false;
-    }
-    
-    // Filtre par statut d'intervention
-    if (selectedStatus && intervention.statut !== selectedStatus) {
-      return false;
-    }
-    
-    // Filtre par statut d'artisan
-    if (selectedArtisanStatuses.length > 0 && intervention.artisan_status) {
-      if (!selectedArtisanStatuses.includes(intervention.artisan_status)) {
-        return false;
-      }
-    }
-    
-    // Filtre par statut de dossier
-    if (selectedDossierStatuses.length > 0 && intervention.artisan_dossier_status) {
-      if (!selectedDossierStatuses.includes(intervention.artisan_dossier_status)) {
-        return false;
-      }
-    }
-    
-    // Filtre par plage de dates d'échéance
-    if (dateRange.from || dateRange.to) {
-      const echeanceDate = new Date(intervention.echeance);
-      
-      if (dateRange.from && echeanceDate < dateRange.from) {
-        return false;
-      }
-      
-      if (dateRange.to && echeanceDate > dateRange.to) {
-        return false;
-      }
-    }
-    
-    return true;
-  });
-
-  // Trier les interventions selon la configuration de tri
-  const sortedInterventions = [...filteredInterventions].sort((a, b) => {
-    let aValue: any;
-    let bValue: any;
-
-    switch (sortConfig.field) {
-      case 'cree':
-        aValue = new Date(a.cree).getTime();
-        bValue = new Date(b.cree).getTime();
-        break;
-      case 'echeance':
-        aValue = new Date(a.echeance).getTime();
-        bValue = new Date(b.echeance).getTime();
-        break;
-      case 'marge':
-        // Calculer la marge (montant - coûts)
-        aValue = (a.montant || 0) - (a.coutSST || 0) - (a.coutMateriaux || 0) - (a.coutInterventions || 0);
-        bValue = (b.montant || 0) - (b.coutSST || 0) - (b.coutMateriaux || 0) - (b.coutInterventions || 0);
-        break;
-      default:
-        return 0;
-    }
-
-    if (sortConfig.direction === 'asc') {
-      return aValue - bValue;
-    } else {
-      return bValue - aValue;
-    }
-  });
+  // Les interventions sont déjà filtrées et triées par l'API
+  const sortedInterventions = interventions;
 
   // Handlers pour les actions du composant InterventionCard
   const handleEditIntervention = (intervention: Intervention) => {
@@ -576,7 +555,7 @@ export const Interventions: React.FC = () => {
           // Si une carte de l'AnimatedCard est sélectionnée, déclencher l'action de la carte
           if (keyboardSelectedIndex >= 0 && selectedActionIndex === 2 && selectedCardIndex >= 0) {
             event.preventDefault();
-            const intervention = filteredInterventions[keyboardSelectedIndex];
+            const intervention = interventions[keyboardSelectedIndex];
             console.log('Déclenchement action carte:', selectedCardIndex, 'pour intervention:', intervention.id);
             
             // Déclencher l'action correspondante à la carte sélectionnée
@@ -601,7 +580,7 @@ export const Interventions: React.FC = () => {
           // Si une icône d'action est sélectionnée, déclencher l'action
           else if (keyboardSelectedIndex >= 0 && selectedActionIndex >= 0) {
             event.preventDefault();
-            const intervention = filteredInterventions[keyboardSelectedIndex];
+            const intervention = interventions[keyboardSelectedIndex];
             console.log('Déclenchement action:', selectedActionIndex, 'pour intervention:', intervention.id);
             
             // Déclencher l'action correspondante
@@ -621,9 +600,9 @@ export const Interventions: React.FC = () => {
             setSelectedActionIndex(-1);
           }
           // Si une intervention est sélectionnée par le clavier, simuler un clic simple
-          else if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex < filteredInterventions.length) {
+          else if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex < interventions.length) {
             event.preventDefault();
-            const intervention = filteredInterventions[keyboardSelectedIndex];
+            const intervention = interventions[keyboardSelectedIndex];
             console.log('Simulation clic simple pour intervention:', intervention.id);
             
             // Simuler un clic simple pour ouvrir le menu déroulant de la carte
@@ -641,7 +620,7 @@ export const Interventions: React.FC = () => {
             document.body.style.cursor = 'auto';
           }
           // Si aucune intervention n'est sélectionnée, démarrer la navigation
-          else if (keyboardSelectedIndex === -1 && filteredInterventions.length > 0) {
+          else if (keyboardSelectedIndex === -1 && interventions.length > 0) {
             event.preventDefault();
             console.log('Démarrage navigation clavier');
             setIsKeyboardMode(true);
@@ -670,9 +649,9 @@ export const Interventions: React.FC = () => {
             }
           } else {
             // Navigation normale entre interventions (seulement s'il y a des interventions)
-            if (filteredInterventions.length > 0) {
+            if (interventions.length > 0) {
               setKeyboardSelectedIndex(prev => {
-                const newIndex = prev > 0 ? prev - 1 : filteredInterventions.length - 1;
+                const newIndex = prev > 0 ? prev - 1 : interventions.length - 1;
                 console.log('Nouvel index (haut):', newIndex);
                 // S'assurer que le curseur reste caché
                 document.body.style.cursor = 'none';
@@ -703,9 +682,9 @@ export const Interventions: React.FC = () => {
             console.log('Sortie de la navigation des cartes, retour sur icône document');
           } else {
             // Navigation normale entre interventions (seulement s'il y a des interventions)
-            if (filteredInterventions.length > 0) {
+            if (interventions.length > 0) {
               setKeyboardSelectedIndex(prev => {
-                const newIndex = prev < filteredInterventions.length - 1 ? prev + 1 : 0;
+                const newIndex = prev < interventions.length - 1 ? prev + 1 : 0;
                 console.log('Nouvel index (bas):', newIndex);
                 // S'assurer que le curseur reste caché
                 document.body.style.cursor = 'none';
@@ -778,9 +757,9 @@ export const Interventions: React.FC = () => {
           
         case 'Tab':
           // Si une intervention est sélectionnée par le clavier, simuler un clic droit
-          if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex < filteredInterventions.length) {
+          if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex < interventions.length) {
             event.preventDefault();
-            const intervention = filteredInterventions[keyboardSelectedIndex];
+            const intervention = interventions[keyboardSelectedIndex];
             console.log('Simulation clic droit pour intervention:', intervention.id);
             
             // Simuler un clic droit en naviguant vers la page complète
@@ -795,9 +774,9 @@ export const Interventions: React.FC = () => {
           
         case ' ':
           // Espace pour changer le statut de l'intervention sélectionnée
-          if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex < filteredInterventions.length) {
+          if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex < interventions.length) {
             event.preventDefault();
-            const intervention = filteredInterventions[keyboardSelectedIndex];
+            const intervention = interventions[keyboardSelectedIndex];
             console.log('Changement de statut pour intervention:', intervention.id);
             
             // Liste des statuts dans l'ordre
@@ -836,18 +815,18 @@ export const Interventions: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [filteredInterventions, keyboardSelectedIndex, isKeyboardMode, mousePosition, selectedStatus, displayedStatuses]);
+  }, [interventions, keyboardSelectedIndex, isKeyboardMode, mousePosition, selectedStatus, displayedStatuses]);
 
   // Réinitialiser la sélection clavier quand les interventions changent
   useEffect(() => {
     // Ne réinitialiser que si la sélection actuelle n'est plus valide
-    if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex >= filteredInterventions.length) {
+    if (keyboardSelectedIndex >= 0 && keyboardSelectedIndex >= interventions.length) {
       setKeyboardSelectedIndex(-1);
       setSelectedActionIndex(-1);
       setIsKeyboardMode(false);
       document.body.style.cursor = 'auto';
     }
-  }, [filteredInterventions, keyboardSelectedIndex]);
+  }, [interventions, keyboardSelectedIndex]);
 
   // Gestionnaire pour maintenir la sélection clavier lors des clics
   const handleCardClick = (index: number) => {

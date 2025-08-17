@@ -32,7 +32,7 @@ import { ArtisanStatusBadge } from '@/components/ui/ArtisanStatusBadge';
 import { ArtisanDossierStatusIcon } from '@/components/ui/ArtisanDossierStatusIcon';
 import { ARTISAN_STATUS, ARTISAN_DOSSIER_STATUS } from '@/types/artisan';
 import AnimatedCard from './AnimatedCard';
-import { InterventionAPI, calculateMarge, formatCurrency } from '@/services/interventionApi';
+import { InterventionAPI, formatCurrency } from '@/services/interventionApi';
 import { EditableCell } from './EditableCell';
 import {
   DropdownMenu,
@@ -353,7 +353,36 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
   };
 
   const getMarge = () => {
-    return calculateMarge(intervention);
+    // Marge = Tarif main d'œuvre - Coûts réels
+    const coutSST = intervention.coutSST || 0;
+    const coutMateriaux = intervention.coutMateriaux || 0;
+    const coutInterventions = intervention.coutInterventions || 0;
+    
+    // Marge = Tarif interventions - (Coûts SST + Coûts Matériaux)
+    const margin = coutInterventions - (coutSST + coutMateriaux);
+    
+    return margin;
+  };
+
+  const getPrixIntervention = () => {
+    // Prix intervention = Tarif main d'œuvre
+    return intervention.coutInterventions || 0;
+  };
+
+  const getMargePourcentage = () => {
+    // Calculer le pourcentage de marge
+    const coutSST = intervention.coutSST || 0;
+    const coutMateriaux = intervention.coutMateriaux || 0;
+    const coutInterventions = intervention.coutInterventions || 0;
+    
+    // Marge = Tarif interventions - (Coûts SST + Coûts Matériaux)
+    const margin = coutInterventions - (coutSST + coutMateriaux);
+    
+    // Pourcentage de marge par rapport au tarif interventions
+    if (coutInterventions === 0) return 0;
+    
+    const pourcentage = (margin / coutInterventions) * 100;
+    return pourcentage;
   };
 
   const getMargeColor = (marge: number) => {
@@ -819,7 +848,7 @@ export const InterventionCard: React.FC<InterventionCardProps> = ({
                   <span>{formatCurrency(getMarge())}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Marge: {intervention.coutInterventions > 0 ? Math.round((getMarge() / intervention.coutInterventions) * 100) : 0}%
+                  Marge: {getMargePourcentage().toFixed(1)}% • Prix intervention: {formatCurrency(getPrixIntervention())}
                 </div>
               </div>
               

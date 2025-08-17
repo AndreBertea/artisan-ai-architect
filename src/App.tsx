@@ -11,6 +11,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { Interventions } from '@/components/Interventions';
 import { InterventionDetail } from '@/components/InterventionDetail';
 import { Artisans } from '@/components/Artisans';
+import { ArtisansReal } from '@/components/ArtisansReal';
 import { ArtisanDetail } from '@/components/ArtisanDetail';
 import { Clients } from '@/components/Clients';
 import { ClientDetail } from '@/components/ClientDetail';
@@ -50,6 +51,7 @@ const AppContent = () => {
                       <Route path="/interventions" element={<Interventions />} />
                       <Route path="/interventions/:id" element={<InterventionDetail />} />
                       <Route path="/artisans" element={<Artisans />} />
+                      <Route path="/artisans-real" element={<ArtisansReal />} />
                       <Route path="/artisans/:id" element={<ArtisanDetail />} />
                       <Route path="/clients" element={<Clients />} />
                       <Route path="/clients/:id" element={<ClientDetail />} />

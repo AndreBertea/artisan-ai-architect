@@ -1,0 +1,114 @@
+/* Styles pour la vue Kanban */
+
+/* Limiter le nombre de lignes pour la description */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Animation pour les cartes Kanban */
+.kanban-card-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.kanban-card-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease-in, transform 200ms ease-out;
+}
+
+.kanban-card-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.kanban-card-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms ease-in, transform 200ms ease-out;
+}
+
+/* Scrollbar personnalisée pour les colonnes Kanban */
+.kanban-column-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.kanban-column-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.kanban-column-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.kanban-column-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Effet de survol pour les cartes */
+.kanban-card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.kanban-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Indicateur d'urgence animé */
+.urgent-indicator {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Styles pour les colonnes vides */
+.kanban-empty-column {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Responsive design pour les colonnes */
+@media (max-width: 1024px) {
+  .kanban-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .kanban-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .kanban-grid {
+    grid-template-columns: 1fr;
+  }
+}

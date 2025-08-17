@@ -61,15 +61,17 @@ export const ArtisanStatusFilter: React.FC<ArtisanStatusFilterProps> = ({
   const [showMenu, setShowMenu] = useState(false);
   const [pinnedStatuses, setPinnedStatuses] = useState<ARTISAN_STATUS[]>([
     ARTISAN_STATUS.CANDIDAT,
-    ARTISAN_STATUS.CONFIRME,
-    ARTISAN_STATUS.EXPERT
+    ARTISAN_STATUS.ONE_SHOT,
+    ARTISAN_STATUS.POTENTIEL,
+    ARTISAN_STATUS.NOVICE
   ]);
 
   // Statuts par défaut (toujours affichés)
   const defaultStatuses: ARTISAN_STATUS[] = [
     ARTISAN_STATUS.CANDIDAT,
-    ARTISAN_STATUS.CONFIRME,
-    ARTISAN_STATUS.EXPERT
+    ARTISAN_STATUS.ONE_SHOT,
+    ARTISAN_STATUS.POTENTIEL,
+    ARTISAN_STATUS.NOVICE
   ];
   
   // Statuts supplémentaires (disponibles dans le menu)

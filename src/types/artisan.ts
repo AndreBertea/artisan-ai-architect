@@ -66,8 +66,14 @@ export interface Artisan {
   name: string;
   metier: string;
   artisanStatus: ARTISAN_STATUS;
-  artisanDossierStatus: ARTISAN_DOSSIER_STATUS; // Nouveau champ
-  // Autres propriétés existantes...
+  artisanDossierStatus: ARTISAN_DOSSIER_STATUS;
+  email: string;
+  telephone: string;
+  adresse: string;
+  dateInscription: string;
+  interventionsRealisees: number;
+  noteMoyenne: number;
+  disponibilite: string;
 }
 
 // Interface étendue pour Intervention avec artisan complet

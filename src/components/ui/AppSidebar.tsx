@@ -24,6 +24,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Interventions", url: "/interventions", icon: LayoutGrid },
   { title: "Artisans", url: "/artisans", icon: Users },
+  { title: "Artisans Real", url: "/artisans-real", icon: Users },
   { title: "Clients", url: "/clients", icon: UserCheck },
 ];
 

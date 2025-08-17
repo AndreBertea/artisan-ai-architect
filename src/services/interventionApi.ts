@@ -158,6 +158,34 @@ export const calculateMarge = (intervention: Intervention): number => {
   return montant - coutSST - coutMateriaux - coutInterventions;
 };
 
+// Calculer la marge avec un pourcentage cible (ex: 20% de marge)
+export const calculateMargeWithTarget = (intervention: Intervention, targetMarginPercentage: number = 20): number => {
+  const coutSST = intervention.coutSST || 0;
+  const coutMateriaux = intervention.coutMateriaux || 0;
+  const coutInterventions = intervention.coutInterventions || 0;
+  const totalCosts = coutSST + coutMateriaux + coutInterventions;
+  
+  if (totalCosts === 0) return 0;
+  
+  // Calculer le prix cible avec la marge souhaitée
+  const targetPrice = totalCosts / (1 - targetMarginPercentage / 100);
+  const targetMargin = targetPrice - totalCosts;
+  
+  return targetMargin;
+};
+
+// Calculer le prix recommandé avec marge
+export const calculateRecommendedPrice = (intervention: Intervention, targetMarginPercentage: number = 20): number => {
+  const coutSST = intervention.coutSST || 0;
+  const coutMateriaux = intervention.coutMateriaux || 0;
+  const coutInterventions = intervention.coutInterventions || 0;
+  const totalCosts = coutSST + coutMateriaux + coutInterventions;
+  
+  if (totalCosts === 0) return 0;
+  
+  return totalCosts / (1 - targetMarginPercentage / 100);
+};
+
 export const formatCurrency = (amount?: number): string => {
   if (!amount) return '€0';
   return new Intl.NumberFormat('fr-FR', { 
@@ -174,6 +202,103 @@ export const InterventionAPI = {
     // Simulation d'une requête API
     await new Promise(resolve => setTimeout(resolve, 300));
     return [...interventionsData];
+  },
+
+  // Récupérer les interventions avec pagination et filtres
+  async getPaginated(params: {
+    page: number;
+    pageSize: number;
+    user?: string;
+    status?: string;
+    artisanStatuses?: ARTISAN_STATUS[];
+    dossierStatuses?: ARTISAN_DOSSIER_STATUS[];
+    dateRange?: { from: Date | null; to: Date | null };
+    sortField?: string;
+    sortDirection?: 'asc' | 'desc';
+  }): Promise<{
+    data: Intervention[];
+    total: number;
+    totalPages: number;
+    currentPage: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  }> {
+    // Simulation d'une requête API
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    let filteredData = [...interventionsData];
+    
+    // Appliquer les filtres
+    if (params.user) {
+      filteredData = filteredData.filter(i => i.utilisateur_assigné === params.user);
+    }
+    
+    if (params.status) {
+      filteredData = filteredData.filter(i => i.statut === params.status);
+    }
+    
+    if (params.artisanStatuses && params.artisanStatuses.length > 0) {
+      filteredData = filteredData.filter(i => i.artisan_status && params.artisanStatuses!.includes(i.artisan_status));
+    }
+    
+    if (params.dossierStatuses && params.dossierStatuses.length > 0) {
+      filteredData = filteredData.filter(i => i.artisan_dossier_status && params.dossierStatuses!.includes(i.artisan_dossier_status));
+    }
+    
+    if (params.dateRange) {
+      if (params.dateRange.from) {
+        filteredData = filteredData.filter(i => new Date(i.echeance) >= params.dateRange.from!);
+      }
+      if (params.dateRange.to) {
+        filteredData = filteredData.filter(i => new Date(i.echeance) <= params.dateRange.to!);
+      }
+    }
+    
+    // Appliquer le tri
+    if (params.sortField) {
+      filteredData.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (params.sortField) {
+          case 'cree':
+            aValue = new Date(a.cree).getTime();
+            bValue = new Date(b.cree).getTime();
+            break;
+          case 'echeance':
+            aValue = new Date(a.echeance).getTime();
+            bValue = new Date(b.echeance).getTime();
+            break;
+          case 'marge':
+            aValue = (a.montant || 0) - (a.coutSST || 0) - (a.coutMateriaux || 0) - (a.coutInterventions || 0);
+            bValue = (b.montant || 0) - (b.coutSST || 0) - (b.coutMateriaux || 0) - (b.coutInterventions || 0);
+            break;
+          default:
+            return 0;
+        }
+
+        if (params.sortDirection === 'asc') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      });
+    }
+    
+    const total = filteredData.length;
+    const totalPages = Math.ceil(total / params.pageSize);
+    const startIndex = (params.page - 1) * params.pageSize;
+    const endIndex = startIndex + params.pageSize;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+    
+    return {
+      data: paginatedData,
+      total,
+      totalPages,
+      currentPage: params.page,
+      hasNext: params.page < totalPages,
+      hasPrev: params.page > 1
+    };
   },
 
   // Récupérer une intervention par ID
